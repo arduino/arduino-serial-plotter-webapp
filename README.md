@@ -1,46 +1,71 @@
-# Getting Started with Create React App
+# Serial Plotter WebApp
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a SPA that receives data points over WebSocket and prints graphs. The purpose is to provide a visual and live representation of data printed to the Serial Port.
 
-## Available Scripts
+The application is designed to be as agnostic as possible regarding how and where it runs. For this reason, it accepts different settings when it's launched in order to configure the look&feel and the connection parameters.
 
-In the project directory, you can run:
 
-### `npm start`
+## Main Tech/framework used
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- React: as the backbone of the application
+- Highcharts.js: to display data
+- WebSockets: to provide a fast communication mechanism between a middle layer and the Serial Plotter (see section [How it works](#how-it-works))
+- Npm: as the registry
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## How it works
 
-### `npm test`
+- As soon as the application is bootstrapped it reads the [URL parameters](#config-parameters) and uses them to set the initial state and create the WebSocket connection
+- When the WebSocket connection is created, data points are collected, parsed, and printed to the chart
+- The app can also send messages back to the boards via WebSocket
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Config Parameters
 
-### `npm run build`
+The Serial Plotter Web App is initialized passing a number of parameters in the URL, in the form of of QueryString (eg: http://localhost:3000?currentBaudrate=100&baudrates=100,200&darkTheme=true&wsPort=5000&generate=true).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+| Name | Description | Type (default) |
+|-|-|-|
+| currentBaudrate | currently selected baudrate | Number(9600)|
+| baudrates | populate the baudrates menu | String[]/Comma separated strings ([])|
+| darkTheme | whether to use the dark version of the plotter | Boolean(false) |
+| wsPort | websocket port used for communication | Number(3030) |
+| generate | generate fake datapoints to print random charts (dev purposes only)| Boolean(false) |
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+It is possible to update the state of the serial plotter by sending the above parameters via WebSocket in the form of a JSON-stringified object, using the `MIDDLEWARE_CONFIG_CHANGED` [Command](#websocket-communication-protocol).
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Websocket Communication Protocol
 
-### `npm run eject`
+Beside of the initial configuration, which is passed in via URL parameters, the communication between the app and the middlewere is implemented over WebSocket.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+It's possible to send a generic JSON-stringified message from and to the Serial Plotter App, as long as it adhere the following format:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```json
+{
+  command: <a valid command, see below>;
+  data: <the value for the command>;
+}
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+The command/data fields follow the specification:
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+| Command Field | Data field format | Initiator | Description |
+|-|-|-|-|
+| "PLOTTER_SET_BAUDRATE" | number | Serial Plotter | request the Middleware to change the baudrate|
+| "PLOTTER_SET_LINE_ENDING" | string | Serial Plotter|  request the Middleware to change the lineending for the messages sent from the middleware to the board|
+| "PLOTTER_SEND_MESSAGE" | text | Serial Plotter | send a message to the middleware. The message will be sent over to the board |
+| "MIDDLEWARE_CONFIG_CHANGED" | Object (see [config parameters](#config-parameters) ) | Middleware | Send an updated configuration from the middleware to the Serial Plotter. Used to update the state, eg: changing the color theme at runtime |
+| "SERIAL_OUTPUT_STREAM" | string | Middleware | the raw data coming from the serial port that is sent by the middleware to the serial plotter |
 
-## Learn More
+Example of a message ready to be sent from the Serial Plotter App to the Middleware
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```typescript
+const websocketMessage = JSON.stringify({command: "PLOTTER_SET_BAUDRATE", data: 9600})
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Development
+
+- `npm i` to install dependencies
+- `npm start` to run the application in development mode @ [http://localhost:3000](http://localhost:3000)
+
+## Deployment
+
+Usually, there is no need to build the app manually: as soon as a new version of the `package.json` is merged into `main` branch, the CI runs and deploys the package to npm.

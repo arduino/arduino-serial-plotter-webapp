@@ -1,0 +1,64 @@
+@import '~arduino-sass/src/variables';
+@import '~arduino-sass/src/fonts';
+@include import-fonts;
+
+body {
+  --text-color: #{$charcoal};
+  --chart-bg: #{$white};
+  --message-to-board-bg: #{$clouds};
+  --axis-labels-color: #{$charcoal};
+  --axis-grid-color: #{$clouds};
+}
+
+body.dark {
+  --text-color: #{$fog};
+  --chart-bg: #{$onyx};
+  --message-to-board-bg: #{$onyx};
+  --axis-labels-color: #{$fog};
+  --axis-grid-color: #{$charcoal};
+}
+
+body {
+  color: var(--text-color);
+  background-color: var(--chart-bg);
+  margin: 0;
+}
+
+.message-to-board {
+  background-color: var(--message-to-board-bg);
+  display: flex;
+  justify-content: space-between;
+  height: 68px;
+  margin-top: 10px;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.highcharts-legend .highcharts-graph {
+  display: none;
+}
+
+.highcharts-legend-item, .highcharts-axis-labels  {
+  color: var(--text-color);
+}
+
+.highcharts-axis-line {
+  display: none;
+}
+.highcharts-tick {
+  stroke: var(--axis-grid-color);
+}
+
+.checkbox {
+  display: inline-block;
+  vertical-align: middle;
+  width: 16px;
+  height: 16px;
+  border: 1px solid;
+  box-sizing: border-box;
+  border-radius: 2px;
+  color: $white;
+  text-align: center;
+  line-height: 13px;
+  background-color: var(--chart-bg);
+}
