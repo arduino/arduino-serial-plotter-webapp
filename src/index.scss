@@ -1,13 +1,55 @@
 @import '~arduino-sass/src/variables';
 @import '~arduino-sass/src/fonts';
-@include import-fonts;
+
+/* open-sans-300 - latin */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 300;
+  src: local(''),
+       url('./fonts/open-sans-300.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('./fonts/open-sans-300.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+/* open-sans-regular - latin */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: local(''),
+       url('./fonts/open-sans-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('./fonts/open-sans-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+/* open-sans-500 - latin */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 500;
+  src: local(''),
+       url('./fonts/open-sans-500.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('./fonts/open-sans-500.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+/* open-sans-600 - latin */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 600;
+  src: local(''),
+       url('./fonts/open-sans-600.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('./fonts/open-sans-600.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
 
 body {
+  font-family: 'Open Sans';
+
   --text-color: #{$charcoal};
   --chart-bg: #{$white};
   --message-to-board-bg: #{$clouds};
   --axis-labels-color: #{$charcoal};
   --axis-grid-color: #{$clouds};
+  --inputtext-bg-color: #{$white};
+  --inputtext-border-color: #{$silver};
+  --select-option-selected: #{$feather};
+  --select-option-focused: #{$clouds};
 }
 
 body.dark {
@@ -16,6 +58,10 @@ body.dark {
   --message-to-board-bg: #{$onyx};
   --axis-labels-color: #{$fog};
   --axis-grid-color: #{$charcoal};
+  --inputtext-bg-color: #{$charcoal};
+  --inputtext-border-color: #{$jet};
+  --select-option-selected: #{$charcoal};
+  --select-option-focused: #{$dust};
 }
 
 body {
@@ -34,6 +80,65 @@ body {
   padding: 0 20px;
 }
 
+.baud, 
+.lineending {
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.singleselect {
+  min-width: 155px;
+  font-size: 12px;
+  
+  .select__control {
+    min-height: 0;
+    background-color: var(--inputtext-bg-color);
+    border-color: var(--inputtext-border-color);
+    border-radius: 1px;
+
+    &--is-focused {
+      border-color: inherit;
+      box-shadow: none;
+
+      &:hover {
+        border-color: inherit;
+      }
+    }
+  }
+  
+  .select__single-value {
+    padding: 1px 2px;
+    color: var(--inputtext-text-color);
+  }
+
+  .select__indicator-separator {
+    display: none;
+  }
+  .select__indicator {
+    padding: 4px;
+    &:hover {
+      color: inherit;
+    }
+  }
+  .select__menu-list{
+    background-color: var(--chart-bg);
+    border-radius: 3px;
+    border: 1px solid var(--inputtext-border-color);
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.25);
+  }
+  .select__option {
+    color: var(--inputtext-text-color);
+
+    &--is-selected {
+      background-color: var(--select-option-selected);
+      font-weight: bold;
+    }
+    &--is-focused {
+      background-color: var(--select-option-focused);
+    }
+  }
+}
+
 .highcharts-legend .highcharts-graph {
   display: none;
 }
@@ -49,6 +154,10 @@ body {
   stroke: var(--axis-grid-color);
 }
 
+
+label {
+  user-select: none;
+}
 .checkbox {
   display: inline-block;
   vertical-align: middle;
@@ -61,4 +170,45 @@ body {
   text-align: center;
   line-height: 13px;
   background-color: var(--chart-bg);
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none;
+}
+
+input[type="text"]{
+  border:none;
+  background-image:none;
+  background-color:transparent;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+
+  color: var(--inputtext-text-color);
+  background-color: var(--inputtext-bg-color);
+
+  border: 1px solid var(--inputtext-border-color);
+  border-radius: 1px;
+  padding: 6px 5px;
+}
+
+*::placeholder {
+  color: #7F8C8D !important;
+}
+
+button {
+  background: #B9C7C9;
+  border: 1px solid #E1E1E1;
+  box-sizing: border-box;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
+  border-radius: 1px;
+  color: $white;
+  padding: 6px 5px;
+
+  &.disabled {
+    opacity: 0.3;
+  }
 }

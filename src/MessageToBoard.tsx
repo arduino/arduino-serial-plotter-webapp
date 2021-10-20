@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Select from "react-select";
 import { SerialPlotter } from "./utils";
 
 export function MessageToBoard({
@@ -10,17 +11,53 @@ export function MessageToBoard({
 }): React.ReactElement {
   const [message, setMessage] = useState("");
 
+  const [baudRate, setBaudrate] = useState("");
+
+  const lineendings = [{ value: "none", label: "No line ending" }];
+
+  const baudrates = config.baudrates.map((baud) => ({
+    value: baud,
+    label: `${baud} baud`,
+  }));
+
   return (
     <div className="message-to-board">
-      <div className="baud">baud</div>
-      <div className="line-ending">line-ending</div>
+      <div>
+        <div className="baud">
+          <Select
+            className="singleselect"
+            classNamePrefix="select"
+            defaultValue={
+              baudrates[
+                baudrates.findIndex((b) => b.value === config.currentBaudrate)
+              ]
+            }
+            name="baudrate"
+            options={baudrates}
+            menuPlacement="top"
+          />
+        </div>
+        <div className="lineending">
+          <Select
+            className="singleselect"
+            classNamePrefix="select"
+            defaultValue={lineendings[0]}
+            name="lineending"
+            options={lineendings}
+            menuPlacement="top"
+          />
+        </div>
+      </div>
       <div className="message-container">
         <input
           type="text"
           value={message}
           onChange={(event) => setMessage(event.target.value)}
+          placeholder="Type Message"
         />
         <button
+          className={message.length === 0 ? "disabled" : ""}
+          disabled={message.length === 0}
           onClick={() => {
             if (websocket && websocket.readyState === WebSocket.OPEN) {
               websocket.send(
@@ -33,7 +70,7 @@ export function MessageToBoard({
             setMessage("");
           }}
         >
-          send
+          Send
         </button>
       </div>
     </div>

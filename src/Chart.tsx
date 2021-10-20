@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, CSSProperties } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import Boost from "highcharts/modules/boost";
@@ -21,6 +21,8 @@ export function Chart({
 }): React.ReactElement {
   const [chart, setChart] = useState<Highcharts.Chart | null>(null);
   const [pause, setPause] = useState<boolean>(false);
+
+  const [series, setSeries] = useState<string[]>([]);
 
   const axisLabelsColor = config.darkTheme ? "#DAE3E3" : "#2C353A";
   const axisGridColor = config.darkTheme ? "#2C353A" : "#ECF1F1";
@@ -57,6 +59,7 @@ export function Chart({
       },
     },
     legend: {
+      enabled: false,
       align: "left",
       verticalAlign: "top",
       itemStyle: { fontWeight: "normal", color: "inherit" },
@@ -84,6 +87,13 @@ export function Chart({
 
   const chartCreatedCallback = React.useCallback((chart: Highcharts.Chart) => {
     setChart(chart);
+
+    const chartRefreshInterval = setInterval(() => {
+      chart.redraw();
+    }, 32);
+    return () => {
+      clearInterval(chartRefreshInterval);
+    };
   }, []);
 
   // as soon as the websocket changes, subscribe to messages
@@ -97,21 +107,21 @@ export function Chart({
         message.command === SerialPlotter.Protocol.Command.SERIAL_OUTPUT_STREAM
       )
         // upon message receival update the chart
-        addDataPoints(parseSerialMessages(message.data), chart);
+        addDataPoints(parseSerialMessages(message.data), chart, setSeries);
     };
   }
 
   // This function gets called only in development mode
   useEffect(() => {
     if (config.generate) {
-      const int = setInterval(() => {
+      const randomValuesInterval = setInterval(() => {
         const messages = generateRandomMessages();
         if (!pause && chart) {
-          addDataPoints(parseSerialMessages(messages), chart);
+          addDataPoints(parseSerialMessages(messages), chart, setSeries);
         }
       }, 32);
       return () => {
-        clearInterval(int);
+        clearInterval(randomValuesInterval);
       };
     }
   }, [pause, config, chart]);
@@ -120,6 +130,13 @@ export function Chart({
     <div className="chart-container" style={{ width: "100%", height: "400px" }}>
       {options && (
         <>
+          <div>
+            <div className="legend">
+              {series.map((serie, i) => (
+                <LegendItem serie={chart?.series[i]} />
+              ))}
+            </div>
+          </div>
           <HighchartsReact
             updateArgs={[true, false, false]}
             options={options}
@@ -127,15 +144,58 @@ export function Chart({
             callback={chartCreatedCallback}
           />
 
-          <button
+          {/* <button
             onClick={() => {
               setPause(!pause);
             }}
           >
             pause/resume
-          </button>
+          </button> */}
         </>
       )}
     </div>
+  );
+}
+
+export function LegendItem({
+  serie,
+}: {
+  serie: Highcharts.Series | undefined;
+}): React.ReactElement {
+  const [visible, setVisible] = useState(serie?.visible);
+
+  const bgColor = visible ? serie?.options.color?.toString() : "";
+  const style: CSSProperties = {
+    backgroundColor: bgColor,
+    borderColor: serie?.options.color?.toString(),
+  };
+
+  return (
+    <label
+      onClick={() => {
+        if (visible) {
+          serie?.hide();
+          setVisible(false);
+        } else {
+          serie?.show();
+          setVisible(true);
+        }
+      }}
+    >
+      <span style={style} className="checkbox">
+        {visible && (
+          <svg
+            width="10"
+            height="9"
+            viewBox="0 0 10 9"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M1 4.5L3.66667 7L9 1" stroke="white" stroke-width="2" />
+          </svg>
+        )}
+      </span>
+      {serie?.name}
+    </label>
   );
 }

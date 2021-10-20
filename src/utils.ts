@@ -28,7 +28,7 @@ export const generateRandomMessages = () => {
     const variables = [];
     for (let j = 1; j < 9; j++) {
       // generate a random serie name
-      variables.push(`serie_${j}\t${Math.floor(Math.random() * 10)}`);
+      variables.push(`${Math.floor(Math.random() * 10)}`);
     }
     let line = variables.join(" ");
 
@@ -105,7 +105,7 @@ export const parseSerialMessages = (
   return newVars;
 };
 
-const DATAPOINT_THRESHOLD = 10000;
+const DATAPOINT_THRESHOLD = 5_000;
 const lineColors = [
   "#0072B2",
   "#D55E00",
@@ -119,7 +119,8 @@ const lineColors = [
 const existingSeries: string[] = [];
 export const addDataPoints = (
   series: { [key: string]: number[] },
-  chart: Highcharts.Chart
+  chart: Highcharts.Chart,
+  setSeries: React.Dispatch<React.SetStateAction<string[]>>
 ) => {
   // if the chart has been crated, can add data to it
   if (chart) {
@@ -142,6 +143,7 @@ export const addDataPoints = (
         existingSeries.push(serieName);
       }
     });
+    setSeries(existingSeries);
 
     let full = false;
 
@@ -162,9 +164,8 @@ export const addDataPoints = (
     }
     if (full) {
       chart.xAxis[0].setExtremes(undefined, undefined);
-    } else {
     }
     // redraw the chart after all new points have been added
-    chart.redraw();
+    // chart.redraw();
   }
 };

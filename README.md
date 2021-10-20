@@ -20,7 +20,7 @@ The application is designed to be as agnostic as possible regarding how and wher
 
 ### Config Parameters
 
-The Serial Plotter Web App is initialized by passing a number of parameters in the URL, in the form of a QueryString (eg: http://localhost:3000?currentBaudrate=100&baudrates=100,200&darkTheme=true&wsPort=5000&generate=true).
+The Serial Plotter Web App is initialized by passing a number of parameters in the URL, in the form of a QueryString (eg: http://localhost:3000?currentBaudrate=100&baudrates=300,1200,2400,4800,9600,19200,38400,57600,74880,115200,230400,250000,500000,1000000,2000000&darkTheme=true&wsPort=5000&generate=true).
 
 | Name | Description | Type (default) |
 |-|-|-|
