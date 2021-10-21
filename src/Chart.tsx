@@ -1,4 +1,4 @@
-import React, { useState, useEffect, CSSProperties } from "react";
+import React, { useState, useEffect } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import Boost from "highcharts/modules/boost";
@@ -8,6 +8,7 @@ import {
   parseSerialMessages,
   SerialPlotter,
 } from "./utils";
+import { Legend } from "./Legend";
 
 // enable performance boosting on highcharts
 Boost(Highcharts);
@@ -17,7 +18,7 @@ export function Chart({
   websocket,
 }: {
   config: SerialPlotter.Config;
-  websocket: WebSocket | null;
+  websocket: React.MutableRefObject<WebSocket | null>;
 }): React.ReactElement {
   const [chart, setChart] = useState<Highcharts.Chart | null>(null);
   const [pause, setPause] = useState<boolean>(false);
@@ -60,24 +61,6 @@ export function Chart({
     },
     legend: {
       enabled: false,
-      align: "left",
-      verticalAlign: "top",
-      itemStyle: { fontWeight: "normal", color: "inherit" },
-      symbolWidth: 0,
-      useHTML: true,
-      labelFormatter: function () {
-        const bgColor = this.visible
-          ? `background-color:${this.options.color};`
-          : "";
-        const borderColor = `border-color:${this.options.color}`;
-        const checkmark = this.visible
-          ? `<svg width="10" height="9" viewBox="0 0 10 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M1 4.5L3.66667 7L9 1" stroke="white" stroke-width="2"/>
-        </svg>`
-          : "";
-
-        return `<span style="${bgColor}${borderColor}" class="checkbox">${checkmark}</span> ${this.name}`;
-      },
     },
     credits: {
       enabled: false,
@@ -97,8 +80,8 @@ export function Chart({
   }, []);
 
   // as soon as the websocket changes, subscribe to messages
-  if (websocket) {
-    websocket.onmessage = (res) => {
+  if (websocket.current) {
+    websocket.current.onmessage = (res) => {
       const message: SerialPlotter.Protocol.Message = JSON.parse(res.data);
 
       if (
@@ -127,75 +110,27 @@ export function Chart({
   }, [pause, config, chart]);
 
   return (
-    <div className="chart-container" style={{ width: "100%", height: "400px" }}>
+    <div className="chart-container">
       {options && (
         <>
-          <div>
-            <div className="legend">
-              {series.map((serie, i) => (
-                <LegendItem serie={chart?.series[i]} />
-              ))}
-            </div>
-          </div>
-          <HighchartsReact
-            updateArgs={[true, false, false]}
-            options={options}
-            highcharts={Highcharts}
-            callback={chartCreatedCallback}
+          <Legend
+            series={chart?.series || []}
+            setPause={setPause}
+            pause={pause}
           />
-
-          {/* <button
-            onClick={() => {
-              setPause(!pause);
-            }}
+          <div
+            className="chart-container"
+            style={{ width: "100%", height: "400px" }}
           >
-            pause/resume
-          </button> */}
+            <HighchartsReact
+              updateArgs={[true, false, false]}
+              options={options}
+              highcharts={Highcharts}
+              callback={chartCreatedCallback}
+            />
+          </div>
         </>
       )}
     </div>
-  );
-}
-
-export function LegendItem({
-  serie,
-}: {
-  serie: Highcharts.Series | undefined;
-}): React.ReactElement {
-  const [visible, setVisible] = useState(serie?.visible);
-
-  const bgColor = visible ? serie?.options.color?.toString() : "";
-  const style: CSSProperties = {
-    backgroundColor: bgColor,
-    borderColor: serie?.options.color?.toString(),
-  };
-
-  return (
-    <label
-      onClick={() => {
-        if (visible) {
-          serie?.hide();
-          setVisible(false);
-        } else {
-          serie?.show();
-          setVisible(true);
-        }
-      }}
-    >
-      <span style={style} className="checkbox">
-        {visible && (
-          <svg
-            width="10"
-            height="9"
-            viewBox="0 0 10 9"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M1 4.5L3.66667 7L9 1" stroke="white" stroke-width="2" />
-          </svg>
-        )}
-      </span>
-      {serie?.name}
-    </label>
   );
 }

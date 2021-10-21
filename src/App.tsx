@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Chart } from "./Chart";
 import { MessageToBoard } from "./MessageToBoard";
 import { SerialPlotter } from "./utils";
 
 export default function App() {
   const [config, setConfig] = useState<SerialPlotter.Config | null>(null);
-  const [websocket, setWebsocket] = useState<WebSocket | null>(null);
+
+  const websocket = useRef<WebSocket | null>(null);
 
   const onMiddlewareMessage = useCallback(
     (message: SerialPlotter.Protocol.Message) => {
@@ -32,15 +33,15 @@ export default function App() {
       return;
     }
 
-    const webSocketConn = new WebSocket(`ws://localhost:${config?.wsPort}`);
-    webSocketConn.onmessage = (res) => {
+    websocket.current = new WebSocket(`ws://localhost:${config?.wsPort}`);
+    websocket.current.onmessage = (res: any) => {
       const message: SerialPlotter.Protocol.Message = JSON.parse(res.data);
       onMiddlewareMessage(message);
     };
-    setWebsocket(webSocketConn);
+    const wsCurrent = websocket.current;
+
     return () => {
-      webSocketConn.close();
-      setWebsocket(null);
+      wsCurrent.close();
     };
   }, [config?.wsPort, onMiddlewareMessage]);
 

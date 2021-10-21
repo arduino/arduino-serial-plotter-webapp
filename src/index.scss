@@ -154,23 +154,41 @@ body {
   stroke: var(--axis-grid-color);
 }
 
+.legend {
+  display: flex;
+  justify-content: space-between;
+  margin-right: 6px;
 
-label {
-  user-select: none;
+  label {
+    user-select: none;
+    margin-left: 16px ;
+  }
+  .checkbox {
+    display: inline-block;
+    vertical-align: middle;
+    width: 16px;
+    height: 16px;
+    border: 1px solid;
+    box-sizing: border-box;
+    border-radius: 2px;
+    color: $white;
+    text-align: center;
+    line-height: 13px;
+    background-color: var(--chart-bg);
+  }
+
+  .clear-button {
+    border: none;
+    background: none;
+    box-shadow: none;
+    padding: 0;
+    
+    svg {
+      path { fill: var(--text-color); }
+    }
+  }
 }
-.checkbox {
-  display: inline-block;
-  vertical-align: middle;
-  width: 16px;
-  height: 16px;
-  border: 1px solid;
-  box-sizing: border-box;
-  border-radius: 2px;
-  color: $white;
-  text-align: center;
-  line-height: 13px;
-  background-color: var(--chart-bg);
-}
+
 
 input:focus,
 select:focus,

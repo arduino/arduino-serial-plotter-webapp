@@ -7,7 +7,7 @@ export function MessageToBoard({
   websocket,
 }: {
   config: SerialPlotter.Config;
-  websocket: WebSocket | null;
+  websocket: React.MutableRefObject<WebSocket | null>;
 }): React.ReactElement {
   const [message, setMessage] = useState("");
 
@@ -59,8 +59,11 @@ export function MessageToBoard({
           className={message.length === 0 ? "disabled" : ""}
           disabled={message.length === 0}
           onClick={() => {
-            if (websocket && websocket.readyState === WebSocket.OPEN) {
-              websocket.send(
+            if (
+              websocket &&
+              websocket?.current?.readyState === WebSocket.OPEN
+            ) {
+              websocket.current.send(
                 JSON.stringify({
                   command: SerialPlotter.Protocol.Command.PLOTTER_SEND_MESSAGE,
                   data: message,
