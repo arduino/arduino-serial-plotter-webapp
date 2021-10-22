@@ -83,7 +83,11 @@ body {
 .baud, 
 .lineending {
   display: inline-block;
-  margin-right: 5px;
+  margin-left: 12px;
+}
+
+.lineending {
+  min-width: unset;
 }
 
 .singleselect {
@@ -157,11 +161,12 @@ body {
 .legend {
   display: flex;
   justify-content: space-between;
-  margin-right: 6px;
+  margin: 10px 16px;
+  align-items: center;
 
   label {
     user-select: none;
-    margin-left: 16px ;
+    margin-right: 16px ;
   }
   .checkbox {
     display: inline-block;
@@ -175,16 +180,22 @@ body {
     text-align: center;
     line-height: 13px;
     background-color: var(--chart-bg);
+    margin-right: 5px ;
   }
 
-  .clear-button {
-    border: none;
-    background: none;
-    box-shadow: none;
-    padding: 0;
-    
-    svg {
-      path { fill: var(--text-color); }
+  .actions {
+    display: inline-flex;
+
+    .clear-button {
+      border: none;
+      background: none;
+      box-shadow: none;
+      padding: 0;
+      margin-left: 20px;
+  
+      svg {
+        path { fill: var(--text-color); }
+      }
     }
   }
 }

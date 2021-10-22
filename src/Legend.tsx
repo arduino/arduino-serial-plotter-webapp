@@ -15,7 +15,7 @@ export function Legend({
     <div className="legend">
       <div>
         {series.map((serie, i) => (
-          <LegendItem serie={series[i]} />
+          <LegendItem serie={series[i]} key={i} />
         ))}
       </div>
       <div className="actions">

@@ -1,15 +1,27 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Chart } from "./Chart";
 import { MessageToBoard } from "./MessageToBoard";
-import { SerialPlotter } from "./utils";
+import { generateRandomMessages, SerialPlotter } from "./utils";
 
 export default function App() {
   const [config, setConfig] = useState<SerialPlotter.Config | null>(null);
 
   const websocket = useRef<WebSocket | null>(null);
 
+  const chartRef = useRef<any>();
+
   const onMiddlewareMessage = useCallback(
-    (message: SerialPlotter.Protocol.Message) => {
+    (
+      message:
+        | SerialPlotter.Protocol.StreamMessage
+        | SerialPlotter.Protocol.CommandMessage
+    ) => {
+      // if there is no command
+      if (!SerialPlotter.Protocol.isCommandMessage(message)) {
+        chartRef && chartRef.current && chartRef.current.addNewData(message);
+        return;
+      }
+
       if (
         message.command ===
         SerialPlotter.Protocol.Command.MIDDLEWARE_CONFIG_CHANGED
@@ -51,6 +63,7 @@ export default function App() {
 
     const urlSettings: SerialPlotter.Config = {
       currentBaudrate: parseInt(urlParams.get("currentBaudrate") || "9600"),
+      currentLineEnding: urlParams.get("lineEnding") || "\n",
       baudrates: (urlParams.get("baudrates") || "")
         .split(",")
         .map((baud: string) => parseInt(baud)),
@@ -67,10 +80,23 @@ export default function App() {
     }
   }, [onMiddlewareMessage, config]);
 
+  // If in "generate" mode, create fake data
+  useEffect(() => {
+    if (config?.generate) {
+      const randomValuesInterval = setInterval(() => {
+        const messages = generateRandomMessages();
+        onMiddlewareMessage(messages);
+      }, 32);
+      return () => {
+        clearInterval(randomValuesInterval);
+      };
+    }
+  }, [config, onMiddlewareMessage]);
+
   return (
     (config && (
       <>
-        <Chart config={config} websocket={websocket} />
+        <Chart config={config} ref={chartRef} />
         <MessageToBoard config={config} websocket={websocket} />
       </>
     )) ||

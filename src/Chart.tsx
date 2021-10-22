@@ -1,29 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useImperativeHandle } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import Boost from "highcharts/modules/boost";
-import {
-  addDataPoints,
-  generateRandomMessages,
-  parseSerialMessages,
-  SerialPlotter,
-} from "./utils";
+import { addDataPoints, parseSerialMessages, SerialPlotter } from "./utils";
 import { Legend } from "./Legend";
 
 // enable performance boosting on highcharts
 Boost(Highcharts);
 
-export function Chart({
-  config,
-  websocket,
-}: {
-  config: SerialPlotter.Config;
-  websocket: React.MutableRefObject<WebSocket | null>;
-}): React.ReactElement {
+function _Chart(
+  {
+    config,
+  }: {
+    config: SerialPlotter.Config;
+  },
+  ref: React.ForwardedRef<any>
+): React.ReactElement {
   const [chart, setChart] = useState<Highcharts.Chart | null>(null);
   const [pause, setPause] = useState<boolean>(false);
 
-  const [series, setSeries] = useState<string[]>([]);
+  const [, setSeries] = useState<string[]>([]);
 
   const axisLabelsColor = config.darkTheme ? "#DAE3E3" : "#2C353A";
   const axisGridColor = config.darkTheme ? "#2C353A" : "#ECF1F1";
@@ -31,7 +27,6 @@ export function Chart({
   const options: Highcharts.Options = {
     boost: {
       enabled: true,
-      // usePreallocated: true,
       useGPUTranslations: true,
       // Chart-level boost when there are more than 5 series in the chart
       seriesThreshold: 0,
@@ -70,44 +65,16 @@ export function Chart({
 
   const chartCreatedCallback = React.useCallback((chart: Highcharts.Chart) => {
     setChart(chart);
-
-    const chartRefreshInterval = setInterval(() => {
-      chart.redraw();
-    }, 32);
-    return () => {
-      clearInterval(chartRefreshInterval);
-    };
   }, []);
 
-  // as soon as the websocket changes, subscribe to messages
-  if (websocket.current) {
-    websocket.current.onmessage = (res) => {
-      const message: SerialPlotter.Protocol.Message = JSON.parse(res.data);
-
-      if (
-        !pause &&
-        chart &&
-        message.command === SerialPlotter.Protocol.Command.SERIAL_OUTPUT_STREAM
-      )
-        // upon message receival update the chart
-        addDataPoints(parseSerialMessages(message.data), chart, setSeries);
-    };
-  }
-
-  // This function gets called only in development mode
-  useEffect(() => {
-    if (config.generate) {
-      const randomValuesInterval = setInterval(() => {
-        const messages = generateRandomMessages();
-        if (!pause && chart) {
-          addDataPoints(parseSerialMessages(messages), chart, setSeries);
-        }
-      }, 32);
-      return () => {
-        clearInterval(randomValuesInterval);
-      };
-    }
-  }, [pause, config, chart]);
+  useImperativeHandle(ref, () => ({
+    addNewData(data: string[]) {
+      // upon message receival update the chart
+      if (chart) {
+        addDataPoints(parseSerialMessages(data), chart, setSeries, pause);
+      }
+    },
+  }));
 
   return (
     <div className="chart-container">
@@ -134,3 +101,5 @@ export function Chart({
     </div>
   );
 }
+
+export const Chart = React.forwardRef(_Chart);

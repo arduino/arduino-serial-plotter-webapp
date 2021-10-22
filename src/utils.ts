@@ -1,6 +1,7 @@
 export namespace SerialPlotter {
   export type Config = {
     currentBaudrate: number;
+    currentLineEnding: string;
     baudrates: number[];
     darkTheme: boolean;
     wsPort: number;
@@ -12,12 +13,19 @@ export namespace SerialPlotter {
       PLOTTER_SET_LINE_ENDING = "PLOTTER_SET_LINE_ENDING",
       PLOTTER_SEND_MESSAGE = "PLOTTER_SEND_MESSAGE",
       MIDDLEWARE_CONFIG_CHANGED = "MIDDLEWARE_CONFIG_CHANGED",
-      SERIAL_OUTPUT_STREAM = "SERIAL_OUTPUT_STREAM",
     }
-    export type Message = {
+    export type CommandMessage = {
       command: SerialPlotter.Protocol.Command;
       data?: any;
     };
+    export type StreamMessage = string[];
+    export type Message = CommandMessage | StreamMessage;
+
+    export function isCommandMessage(
+      msg: CommandMessage | StreamMessage
+    ): msg is CommandMessage {
+      return (msg as CommandMessage).command !== undefined;
+    }
   }
 }
 
@@ -120,10 +128,11 @@ const existingSeries: string[] = [];
 export const addDataPoints = (
   series: { [key: string]: number[] },
   chart: Highcharts.Chart,
-  setSeries: React.Dispatch<React.SetStateAction<string[]>>
+  setSeries: React.Dispatch<React.SetStateAction<string[]>>,
+  pause: boolean
 ) => {
   // if the chart has been crated, can add data to it
-  if (chart) {
+  if (chart && !pause) {
     // add missing series
     Object.keys(series).forEach((serieName) => {
       if (!existingSeries.includes(serieName) && existingSeries.length < 7) {
@@ -166,6 +175,6 @@ export const addDataPoints = (
       chart.xAxis[0].setExtremes(undefined, undefined);
     }
     // redraw the chart after all new points have been added
-    // chart.redraw();
+    chart.redraw();
   }
 };

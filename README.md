@@ -36,7 +36,7 @@ It is possible to update the state of the serial plotter by sending the above pa
 
 Besides the initial configuration, which is passed in via URL parameters, the communication between the app and the middleware is implemented over WebSocket.
 
-It's possible to send a generic JSON-stringified message from and to the Serial Plotter App, as long as it adheres to the following format:
+It's possible to send a JSON-stringified message from and to the Serial Plotter App, as long as it adheres to the following format:
 
 ```
 {
@@ -53,13 +53,15 @@ The command/data fields follow the specification:
 | "PLOTTER_SET_LINE_ENDING" | string | Serial Plotter|  request the middleware to change the lineending for the messages sent from the middleware to the board|
 | "PLOTTER_SEND_MESSAGE" | text | Serial Plotter | send a message to the middleware. The message will be sent over to the board |
 | "MIDDLEWARE_CONFIG_CHANGED" | Object (see [config parameters](#config-parameters) ) | Middleware | Send an updated configuration from the middleware to the Serial Plotter. Used to update the state, eg: changing the color theme at runtime |
-| "SERIAL_OUTPUT_STREAM" | string | Middleware | the raw data coming from the serial port that is sent by the middleware to the serial plotter |
 
 Example of a message ready to be sent from the Serial Plotter App to the Middleware
 
 ```typescript
 const websocketMessage = JSON.stringify({command: "PLOTTER_SET_BAUDRATE", data: 9600})
 ```
+
+**NOTE: For performance sake, the raw data coming from the serial port that is sent by the middleware to the serial plotter has to be a stringified array of values, rather than the Command/Data object**
+
 
 ## Development
 
