@@ -49,15 +49,15 @@ export const generateRandomMessages = () => {
 let buffer = "";
 export const parseSerialMessages = (
   messages: string[],
-  separator = "\n"
+  separator = "\r\n"
 ): { [key: string]: number[] } => {
   //add any leftover from the buffer to the first line
   messages[0] = buffer + messages[0];
 
   // add the last message to the buffer if incomplete
   if (
-    messages[messages.length - 1].charAt(
-      messages[messages.length - 1].length - 1
+    messages[messages.length - 1].substr(
+      messages[messages.length - 1].length - separator.length
     ) !== separator
   ) {
     buffer = messages[messages.length - 1];
@@ -89,7 +89,9 @@ export const parseSerialMessages = (
       // otherwise they are spaces
       const values = message.split(/\s/);
       values.forEach((value, i) => {
-        tokens.push(...[`value ${i}`, value]);
+        if (value.length) {
+          tokens.push(...[`value ${i}`, value]);
+        }
       });
     }
 
