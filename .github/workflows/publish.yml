@@ -15,6 +15,7 @@ jobs:
       - run: npm install
       # TODO: enable test as soon as they are implemented
       # - run: npm test
+      - run: npm run build
       - uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_TOKEN }}
