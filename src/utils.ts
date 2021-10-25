@@ -51,66 +51,67 @@ export const parseSerialMessages = (
   messages: string[],
   separator = "\r\n"
 ): { [key: string]: number[] } => {
+  var re = new RegExp(`(${separator})`, "g");
   //add any leftover from the buffer to the first line
-  messages[0] = buffer + messages[0];
+  const messagesAndBuffer = (buffer + messages.join(""))
+    .split(re)
+    .filter((message) => message.length > 0);
 
-  // add the last message to the buffer if incomplete
-  if (
-    messages[messages.length - 1].substr(
-      messages[messages.length - 1].length - separator.length
-    ) !== separator
-  ) {
-    buffer = messages[messages.length - 1];
-    messages.splice(-1);
-  } else {
-    buffer = "";
+  // remove the previous buffer
+  buffer = "";
+  // check if the last message contains the delimiter, if not, it's an incomplete string that needs to be added to the buffer
+  if (messagesAndBuffer[messagesAndBuffer.length - 1] !== separator) {
+    buffer = messagesAndBuffer[messagesAndBuffer.length - 1];
+    messagesAndBuffer.splice(-1);
   }
 
   const newVars: { [key: string]: number[] } = {};
 
   // for each line, explode variables
-  messages.forEach((message) => {
-    //there are two supported formats:
-    // format1: <value1> <value2> <value3>
-    // format2: name1:<value1>,name2:<value2>,name3:<value3>
+  messagesAndBuffer
+    .filter((message) => message !== separator)
+    .forEach((message) => {
+      //there are two supported formats:
+      // format1: <value1> <value2> <value3>
+      // format2: name1:<value1>,name2:<value2>,name3:<value3>
 
-    // if we find a comma, we assume the latter is being used
-    let tokens: string[] = [];
-    if (message.indexOf(",") > 0) {
-      message.split(/\s/).forEach((keyValue: string) => {
-        let [key, value] = keyValue.split(":");
-        key = key.trim();
-        value = value.trim();
-        if (key.length > 0 && value.length > 0) {
-          tokens.push(...[key, value]);
-        }
-      });
-    } else {
-      // otherwise they are spaces
-      const values = message.split(/\s/);
-      values.forEach((value, i) => {
-        if (value.length) {
-          tokens.push(...[`value ${i}`, value]);
-        }
-      });
-    }
-
-    for (let i = 0; i < tokens.length - 1; i = i + 2) {
-      const varName = tokens[i];
-      const varValue = parseFloat(tokens[i + 1]);
-
-      //skip line endings
-      if (varName.length === 0) {
-        continue;
+      // if we find a comma, we assume the latter is being used
+      let tokens: string[] = [];
+      if (message.indexOf(",") > 0) {
+        message.split(",").forEach((keyValue: string) => {
+          let [key, value] = keyValue.split(":");
+          key = key.trim();
+          value = value.trim();
+          if (key.length > 0 && value.length > 0) {
+            tokens.push(...[key, value]);
+          }
+        });
+      } else {
+        // otherwise they are spaces
+        const values = message.split(/\s/);
+        values.forEach((value, i) => {
+          if (value.length) {
+            tokens.push(...[`value ${i + 1}`, value]);
+          }
+        });
       }
 
-      if (!newVars[varName]) {
-        newVars[varName] = [];
-      }
+      for (let i = 0; i < tokens.length - 1; i = i + 2) {
+        const varName = tokens[i];
+        const varValue = parseFloat(tokens[i + 1]);
 
-      newVars[varName].push(varValue);
-    }
-  });
+        //skip line endings
+        if (varName.length === 0) {
+          continue;
+        }
+
+        if (!newVars[varName]) {
+          newVars[varName] = [];
+        }
+
+        newVars[varName].push(varValue);
+      }
+    });
 
   return newVars;
 };

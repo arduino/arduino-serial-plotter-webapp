@@ -33,10 +33,10 @@ export default function App() {
         } else {
           document.body.classList.remove("dark");
         }
-        setConfig(message.data);
+        setConfig({ ...config, ...message.data });
       }
     },
-    [setConfig]
+    [setConfig, config]
   );
 
   // as soon as the wsPort is set, create a websocket connection
