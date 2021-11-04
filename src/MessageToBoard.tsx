@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import { SerialPlotter } from "./utils";
 
@@ -14,6 +14,14 @@ export function MessageToBoard({
   const [baudRate, setBaudrate] = useState(config.currentBaudrate);
   const [lineEnding, setLineEnding] = useState(config.currentLineEnding);
 
+  useEffect(() => {
+    setBaudrate(config.currentBaudrate);
+  }, [config.currentBaudrate]);
+
+  useEffect(() => {
+    setLineEnding(config.currentLineEnding);
+  }, [config.currentLineEnding]);
+
   const lineendings = [
     { value: "", label: "No Line Ending" },
     { value: "\n", label: "New Line" },
@@ -28,6 +36,7 @@ export function MessageToBoard({
 
   const wsSend = (command: string, data: string) => {
     if (websocket && websocket?.current?.readyState === WebSocket.OPEN) {
+      console.log("send");
       websocket.current.send(
         JSON.stringify({
           command,
@@ -62,7 +71,7 @@ export function MessageToBoard({
         <Select
           className="singleselect lineending"
           classNamePrefix="select"
-          defaultValue={
+          value={
             lineendings[lineendings.findIndex((l) => l.value === lineEnding)]
           }
           name="lineending"
@@ -84,9 +93,7 @@ export function MessageToBoard({
           <Select
             className="singleselect"
             classNamePrefix="select"
-            defaultValue={
-              baudrates[baudrates.findIndex((b) => b.value === baudRate)]
-            }
+            value={baudrates[baudrates.findIndex((b) => b.value === baudRate)]}
             name="baudrate"
             options={baudrates}
             menuPlacement="top"

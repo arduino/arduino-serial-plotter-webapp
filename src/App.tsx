@@ -28,10 +28,10 @@ export default function App() {
       ) {
         // set document dark theme
         const { darkTheme } = message.data as SerialPlotter.Config;
-        if (darkTheme) {
-          document.body.classList.add("dark");
-        } else {
-          document.body.classList.remove("dark");
+        if (typeof darkTheme !== "undefined") {
+          darkTheme
+            ? document.body.classList.add("dark")
+            : document.body.classList.remove("dark");
         }
         setConfig({ ...config, ...message.data });
       }
