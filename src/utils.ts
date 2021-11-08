@@ -1,3 +1,6 @@
+import { ChartOptions } from "chart.js";
+import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
+
 export namespace SerialPlotter {
   export type Config = {
     currentBaudrate: number;
@@ -5,12 +8,14 @@ export namespace SerialPlotter {
     baudrates: number[];
     darkTheme: boolean;
     wsPort: number;
+    interpolate: boolean;
     generate?: boolean;
   };
   export namespace Protocol {
     export enum Command {
       PLOTTER_SET_BAUDRATE = "PLOTTER_SET_BAUDRATE",
       PLOTTER_SET_LINE_ENDING = "PLOTTER_SET_LINE_ENDING",
+      PLOTTER_SET_INTERPOLATE = "PLOTTER_SET_INTERPOLATE",
       PLOTTER_SEND_MESSAGE = "PLOTTER_SEND_MESSAGE",
       MIDDLEWARE_CONFIG_CHANGED = "MIDDLEWARE_CONFIG_CHANGED",
     }
@@ -47,6 +52,7 @@ export const generateRandomMessages = () => {
 };
 
 let buffer = "";
+
 export const parseSerialMessages = (
   messages: string[],
   separator = "\r\n"
@@ -116,7 +122,6 @@ export const parseSerialMessages = (
   return newVars;
 };
 
-const DATAPOINT_THRESHOLD = 5_000;
 const lineColors = [
   "#0072B2",
   "#D55E00",
@@ -128,56 +133,61 @@ const lineColors = [
   "#95A5A6",
 ];
 const existingSeries: string[] = [];
+
+let datapointCounter = 0;
+
 export const addDataPoints = (
   series: { [key: string]: number[] },
-  chart: Highcharts.Chart,
-  setSeries: React.Dispatch<React.SetStateAction<string[]>>,
-  pause: boolean
+  chart: ChartJSOrUndefined,
+  opts: ChartOptions<"line">,
+  cubicInterpolationMode: "default" | "monotone",
+  dataPointThreshold: number,
+  setForceUpdate: React.Dispatch<any>
 ) => {
+  if (!chart) {
+    return;
+  }
   // if the chart has been crated, can add data to it
-  if (chart && !pause) {
+  if (chart && chart.data.datasets) {
     // add missing series
-    Object.keys(series).forEach((serieName) => {
-      if (!existingSeries.includes(serieName) && existingSeries.length < 7) {
-        chart.addSeries(
-          {
-            name: serieName,
-            turboThreshold: 1,
-            marker: { symbol: "circle" },
+    existingSeries.length < 8 &&
+      Object.keys(series).forEach((serieName) => {
+        if (!existingSeries.includes(serieName)) {
+          chart.data.datasets.push({
             data: [],
-            type: "line",
-            boostThreshold: 1,
-            color: lineColors[chart.series.length],
-          },
-          false,
-          false
-        );
-        existingSeries.push(serieName);
-      }
-    });
-    setSeries(existingSeries);
+            label: serieName,
+            borderColor: lineColors[existingSeries.length],
+            backgroundColor: lineColors[existingSeries.length],
+            borderWidth: 1,
+            pointRadius: 0,
+            cubicInterpolationMode,
+          });
 
-    let full = false;
+          existingSeries.push(serieName);
+          setForceUpdate(existingSeries.length);
+        }
+      });
 
-    for (let s = 0; s < chart.series.length; s++) {
-      const serie = chart.series[s];
-      const serieToPopulate = series[serie.getName()];
+    const xAxis =
+      opts.scales!.x?.type === "realtime" ? Date.now() : datapointCounter++;
+
+    for (let s = 0; s < chart.data.datasets.length; s++) {
+      const serie = chart.data.datasets[s];
+      const serieToPopulate = series[serie.label || ""] || null;
 
       if (serieToPopulate) {
-        for (const value of serieToPopulate) {
-          const shift = serie.getValidPoints().length > DATAPOINT_THRESHOLD; // shift if the series is longer than DATAPOINT_THRESHOLD
-          serie.addPoint(value, false, shift);
+        for (let i = 0; i < serieToPopulate.length; i++) {
+          serie.data.push({ x: xAxis, y: serieToPopulate[i] });
+        }
+        // remove old data if the series is longer than DATAPOINT_THRESHOLD
+        if (
+          serie.data.length > dataPointThreshold &&
+          chart?.options?.scales?.x?.type !== "realtime"
+        ) {
+          serie.data.splice(0, serie.data.length - dataPointThreshold);
         }
       }
-
-      if (serie && serie.points && serie.points.length >= DATAPOINT_THRESHOLD) {
-        full = true;
-      }
     }
-    if (full) {
-      chart.xAxis[0].setExtremes(undefined, undefined);
-    }
-    // redraw the chart after all new points have been added
-    chart.redraw();
+    chart.update();
   }
 };

@@ -8,7 +8,7 @@ The application is designed to be as agnostic as possible regarding how and wher
 ## Main Tech/framework used
 
 - React: as the backbone of the application
-- Highcharts.js: to display data
+- Chart.js: to display data
 - WebSockets: to provide a fast communication mechanism between a middle layer and the Serial Plotter (see section [How it works](#how-it-works))
 - Npm: as the registry
 

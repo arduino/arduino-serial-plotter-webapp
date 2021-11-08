@@ -1,21 +1,21 @@
 import React from "react";
-import Highcharts from "highcharts";
+import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 import { LegendItem } from "./LegendItem";
 
 export function Legend({
-  series,
+  chartRef,
   pause,
   setPause,
 }: {
-  series: Highcharts.Series[];
+  chartRef: ChartJSOrUndefined<"line">;
   pause: boolean;
-  setPause: React.Dispatch<React.SetStateAction<boolean>>;
+  setPause: (pause: boolean) => void;
 }): React.ReactElement {
   return (
     <div className="legend">
       <div>
-        {series.map((serie, i) => (
-          <LegendItem serie={series[i]} key={i} />
+        {chartRef?.data.datasets.map((dataset, i) => (
+          <LegendItem dataset={dataset} key={i} chartRef={chartRef} />
         ))}
       </div>
       <div className="actions">
@@ -30,7 +30,12 @@ export function Legend({
         <button
           className="clear-button"
           onClick={() => {
-            series.forEach((serie) => serie.setData([]));
+            if (chartRef && Array.isArray(chartRef.data.datasets)) {
+              for (let dataI in chartRef?.data.datasets) {
+                chartRef.data.datasets[dataI].data = [];
+              }
+            }
+            chartRef?.update();
           }}
         >
           <svg

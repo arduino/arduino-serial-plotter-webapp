@@ -1,37 +1,45 @@
+import { ChartDataset } from "chart.js";
 import React, { useState, CSSProperties } from "react";
-import Highcharts from "highcharts";
+import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 
 import checkmark from "./images/checkmark.svg";
 
 export function LegendItem({
-  serie,
+  dataset,
+  chartRef,
 }: {
-  serie: Highcharts.Series | undefined;
+  dataset: ChartDataset<"line">;
+  chartRef: ChartJSOrUndefined<"line">;
 }): React.ReactElement {
-  const [visible, setVisible] = useState(serie?.visible);
+  const [visible, setVisible] = useState(!dataset.hidden);
 
-  const bgColor = visible ? serie?.options.color?.toString() : "";
+  if (!dataset) {
+    return <></>;
+  }
+
+  const bgColor = visible ? dataset.borderColor!.toString() : "";
   const style: CSSProperties = {
     backgroundColor: bgColor,
-    borderColor: serie?.options.color?.toString(),
+    borderColor: dataset.borderColor!.toString(),
   };
 
   return (
     <label
       onClick={() => {
         if (visible) {
-          serie?.hide();
+          dataset.hidden = true;
           setVisible(false);
         } else {
-          serie?.show();
+          dataset.hidden = false;
           setVisible(true);
         }
+        chartRef?.update();
       }}
     >
       <span style={style} className="checkbox">
         {visible && <img src={checkmark} alt="" />}
       </span>
-      {serie?.name}
+      {dataset?.label}
     </label>
   );
 }

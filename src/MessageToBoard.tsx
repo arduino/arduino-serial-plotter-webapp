@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import { SerialPlotter } from "./utils";
+import Switch from "react-switch";
 
 export function MessageToBoard({
   config,
+  cubicInterpolationMode,
+  setInterpolate,
   websocket,
 }: {
   config: SerialPlotter.Config;
+  cubicInterpolationMode: "monotone" | "default";
+  setInterpolate: (interpolate: boolean) => void;
   websocket: React.MutableRefObject<WebSocket | null>;
 }): React.ReactElement {
   const [message, setMessage] = useState("");
@@ -36,7 +41,6 @@ export function MessageToBoard({
 
   const wsSend = (command: string, data: string) => {
     if (websocket && websocket?.current?.readyState === WebSocket.OPEN) {
-      console.log("send");
       websocket.current.send(
         JSON.stringify({
           command,
@@ -77,17 +81,39 @@ export function MessageToBoard({
           name="lineending"
           options={lineendings}
           menuPlacement="top"
-          onChange={(val) => {
-            if (val) {
-              setLineEnding(val.value);
+          onChange={(event) => {
+            if (event) {
+              setLineEnding(event.value);
               wsSend(
                 SerialPlotter.Protocol.Command.PLOTTER_SET_LINE_ENDING,
-                val.value
+                event.value
               );
             }
           }}
         />
       </div>
+      <label>
+        <span>Interpolate</span>
+        <Switch
+          checkedIcon={false}
+          uncheckedIcon={false}
+          height={20}
+          width={37}
+          handleDiameter={14}
+          offColor="#C9D2D2"
+          onColor="#008184"
+          onChange={(val) => {
+            setInterpolate(val);
+
+            // send new interpolation mode to middleware
+            wsSend(
+              SerialPlotter.Protocol.Command.PLOTTER_SET_INTERPOLATE,
+              val.toString()
+            );
+          }}
+          checked={cubicInterpolationMode === "monotone"}
+        />
+      </label>
       <div>
         <div className="baud">
           <Select

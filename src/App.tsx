@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { Chart } from "./Chart";
-import { MessageToBoard } from "./MessageToBoard";
+import { ChartPlotter } from "./ChartPlotter";
 import { generateRandomMessages, SerialPlotter } from "./utils";
 
 export default function App() {
@@ -69,6 +68,7 @@ export default function App() {
         .map((baud: string) => parseInt(baud)),
       darkTheme: urlParams.get("darkTheme") === "true",
       wsPort: parseInt(urlParams.get("wsPort") || "3030"),
+      interpolate: urlParams.get("interpolate") === "true",
       generate: urlParams.get("generate") === "true",
     };
 
@@ -95,10 +95,7 @@ export default function App() {
 
   return (
     (config && (
-      <>
-        <Chart config={config} ref={chartRef} />
-        <MessageToBoard config={config} websocket={websocket} />
-      </>
+      <ChartPlotter config={config} ref={chartRef} websocket={websocket} />
     )) ||
     null
   );
