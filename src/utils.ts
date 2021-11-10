@@ -1,4 +1,4 @@
-import { ChartOptions } from "chart.js";
+import { ChartDataset, ChartOptions } from "chart.js";
 import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 
 export namespace SerialPlotter {
@@ -34,30 +34,16 @@ export namespace SerialPlotter {
   }
 }
 
-export const generateRandomMessages = () => {
-  const messages: string[] = [];
-
-  for (let i = 0; i < 1; i++) {
-    const variables = [];
-    for (let j = 1; j < 9; j++) {
-      // generate a random serie name
-      variables.push(`${Math.floor(Math.random() * 10)}`);
-    }
-    let line = variables.join(" ");
-
-    messages.push(line + "\r\n");
-  }
-
-  return messages;
-};
-
 let buffer = "";
+const separator = "\r\n";
+var re = new RegExp(`(${separator})`, "g");
 
 export const parseSerialMessages = (
-  messages: string[],
-  separator = "\r\n"
-): { [key: string]: number[] } => {
-  var re = new RegExp(`(${separator})`, "g");
+  messages: string[]
+): {
+  datasetNames: string[];
+  parsedLines: { [key: string]: number }[];
+} => {
   //add any leftover from the buffer to the first line
   const messagesAndBuffer = (buffer + messages.join(""))
     .split(re)
@@ -71,12 +57,20 @@ export const parseSerialMessages = (
     messagesAndBuffer.splice(-1);
   }
 
-  const newVars: { [key: string]: number[] } = {};
+  const datasetNames: { [key: string]: boolean } = {};
+  const parsedLines: { [key: string]: number }[] = [];
 
   // for each line, explode variables
   messagesAndBuffer
     .filter((message) => message !== separator)
     .forEach((message) => {
+      const parsedLine: { [key: string]: number } = {};
+
+      // TODO: this drops messages that arrive too fast (keeping only the first one). Is this a problem?
+      if (parsedLines.length > 0) {
+        return;
+      }
+
       //there are two supported formats:
       // format1: <value1> <value2> <value3>
       // format2: name1:<value1>,name2:<value2>,name3:<value3>
@@ -86,9 +80,9 @@ export const parseSerialMessages = (
       if (message.indexOf(",") > 0) {
         message.split(",").forEach((keyValue: string) => {
           let [key, value] = keyValue.split(":");
-          key = key.trim();
-          value = value.trim();
-          if (key.length > 0 && value.length > 0) {
+          key = key && key.trim();
+          value = value && value.trim();
+          if (key && key.length > 0 && value && value.length > 0) {
             tokens.push(...[key, value]);
           }
         });
@@ -111,15 +105,15 @@ export const parseSerialMessages = (
           continue;
         }
 
-        if (!newVars[varName]) {
-          newVars[varName] = [];
-        }
+        // add the variable to the map of variables
+        datasetNames[varName] = true;
 
-        newVars[varName].push(varValue);
+        parsedLine[varName] = varValue;
       }
+      parsedLines.push(parsedLine);
     });
 
-  return newVars;
+  return { parsedLines, datasetNames: Object.keys(datasetNames) };
 };
 
 const lineColors = [
@@ -132,12 +126,17 @@ const lineColors = [
   "#F0E442",
   "#95A5A6",
 ];
-const existingSeries: string[] = [];
+const existingDatasetsMap: {
+  [key: string]: ChartDataset<"line">;
+} = {};
 
 let datapointCounter = 0;
 
 export const addDataPoints = (
-  series: { [key: string]: number[] },
+  parsedMessages: {
+    datasetNames: string[];
+    parsedLines: { [key: string]: number }[];
+  },
   chart: ChartJSOrUndefined,
   opts: ChartOptions<"line">,
   cubicInterpolationMode: "default" | "monotone",
@@ -147,44 +146,72 @@ export const addDataPoints = (
   if (!chart) {
     return;
   }
+
   // if the chart has been crated, can add data to it
   if (chart && chart.data.datasets) {
-    // add missing series
-    existingSeries.length < 8 &&
-      Object.keys(series).forEach((serieName) => {
-        if (!existingSeries.includes(serieName)) {
-          chart.data.datasets.push({
+    const { datasetNames, parsedLines } = parsedMessages;
+
+    const existingDatasetNames = Object.keys(existingDatasetsMap);
+
+    // add missing datasets to the chart
+    existingDatasetNames.length < 8 &&
+      datasetNames.forEach((datasetName) => {
+        if (!existingDatasetNames.includes(datasetName)) {
+          const newDataset = {
             data: [],
-            label: serieName,
-            borderColor: lineColors[existingSeries.length],
-            backgroundColor: lineColors[existingSeries.length],
+            label: datasetName,
+            borderColor: lineColors[existingDatasetNames.length],
+            backgroundColor: lineColors[existingDatasetNames.length],
             borderWidth: 1,
             pointRadius: 0,
             cubicInterpolationMode,
-          });
+          };
 
-          existingSeries.push(serieName);
-          setForceUpdate(existingSeries.length);
+          existingDatasetsMap[datasetName] = newDataset;
+          chart.data.datasets.push(newDataset);
+          existingDatasetNames.push(datasetName);
+
+          // used to force a re-render in the parent component
+          setForceUpdate(existingDatasetNames.length);
         }
       });
 
-    const xAxis =
-      opts.scales!.x?.type === "realtime" ? Date.now() : datapointCounter++;
+    // iterate every parsedLine, adding each variable to the corrisponding variable in the dataset
+    // if a dataset has not variable in the line, fill it with and empty value
+    parsedLines.forEach((parsedLine) => {
+      const xAxis =
+        opts.scales!.x?.type === "realtime" ? Date.now() : datapointCounter++;
 
+      // add empty values to datasets that are missing in the parsedLine
+      Object.keys(existingDatasetsMap).forEach((datasetName) => {
+        const newPoint =
+          datasetName in parsedLine
+            ? {
+                x: xAxis,
+                y: parsedLine[datasetName],
+              }
+            : null;
+
+        newPoint && existingDatasetsMap[datasetName].data.push(newPoint);
+      });
+    });
+
+    const oldDataValue = datapointCounter - dataPointThreshold;
     for (let s = 0; s < chart.data.datasets.length; s++) {
-      const serie = chart.data.datasets[s];
-      const serieToPopulate = series[serie.label || ""] || null;
+      const dataset = chart.data.datasets[s];
 
-      if (serieToPopulate) {
-        for (let i = 0; i < serieToPopulate.length; i++) {
-          serie.data.push({ x: xAxis, y: serieToPopulate[i] });
+      let delCount = 0;
+      for (let i = 0; i < dataset.data.length; i++) {
+        if (dataset.data[i] && (dataset.data[i] as any).x < oldDataValue) {
+          delCount++;
+        } else {
+          dataset.data.splice(0, delCount);
+          break; // go to the next dataset
         }
-        // remove old data if the series is longer than DATAPOINT_THRESHOLD
-        if (
-          serie.data.length > dataPointThreshold &&
-          chart?.options?.scales?.x?.type !== "realtime"
-        ) {
-          serie.data.splice(0, serie.data.length - dataPointThreshold);
+
+        // purge the data if we need to remove all points
+        if (dataset.data.length === delCount) {
+          dataset.data = [];
         }
       }
     }

@@ -20,7 +20,7 @@ The application is designed to be as agnostic as possible regarding how and wher
 
 ### Config Parameters
 
-The Serial Plotter Web App is initialized by passing a number of parameters in the URL, in the form of a QueryString (eg: http://localhost:3000?currentBaudrate=100&baudrates=300,1200,2400,4800,9600,19200,38400,57600,74880,115200,230400,250000,500000,1000000,2000000&darkTheme=true&wsPort=5000&generate=true).
+The Serial Plotter Web App is initialized by passing a number of parameters in the URL, in the form of a QueryString (eg: http://localhost:3000?currentBaudrate=100&baudrates=300,1200,2400,4800,9600,19200,38400,57600,74880,115200,230400,250000,500000,1000000,2000000&darkTheme=true&wsPort=5000&interpolate=true&generate=true).
 
 | Name | Description | Type (default) |
 |-|-|-|
@@ -49,9 +49,10 @@ The command/data fields follow the specification:
 
 | Command Field | Data field format | Initiator | Description |
 |-|-|-|-|
-| "PLOTTER_SET_BAUDRATE" | number | Serial Plotter | request the middleware to change the baudrate|
-| "PLOTTER_SET_LINE_ENDING" | string | Serial Plotter|  request the middleware to change the lineending for the messages sent from the middleware to the board|
+| "PLOTTER_SET_BAUDRATE" | number | Serial Plotter | request the middleware to change the baudrate |
+| "PLOTTER_SET_LINE_ENDING" | string | Serial Plotter|  request the middleware to change the lineending for the messages sent from the middleware to the board |
 | "PLOTTER_SEND_MESSAGE" | text | Serial Plotter | send a message to the middleware. The message will be sent over to the board |
+| "PLOTTER_SET_INTERPOLATE" | boolean | Serial Plotter | send the interpolation flag to the Middleware |
 | "MIDDLEWARE_CONFIG_CHANGED" | Object (see [config parameters](#config-parameters) ) | Middleware | Send an updated configuration from the middleware to the Serial Plotter. Used to update the state, eg: changing the color theme at runtime |
 
 Example of a message ready to be sent from the Serial Plotter App to the Middleware

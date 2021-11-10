@@ -39,7 +39,7 @@ export function MessageToBoard({
     label: `${baud} baud`,
   }));
 
-  const wsSend = (command: string, data: string) => {
+  const wsSend = (command: string, data: string | number | boolean) => {
     if (websocket && websocket?.current?.readyState === WebSocket.OPEN) {
       websocket.current.send(
         JSON.stringify({
@@ -52,7 +52,18 @@ export function MessageToBoard({
 
   return (
     <div className="message-to-board">
-      <div className="message-container">
+      <form
+        className="message-container"
+        onSubmit={(e) => {
+          wsSend(
+            SerialPlotter.Protocol.Command.PLOTTER_SEND_MESSAGE,
+            message + lineEnding
+          );
+          setMessage("");
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
         <input
           type="text"
           value={message}
@@ -60,18 +71,13 @@ export function MessageToBoard({
           placeholder="Type Message"
         />
         <button
+          type="submit"
           className={message.length === 0 ? "disabled" : ""}
           disabled={message.length === 0}
-          onClick={() => {
-            wsSend(
-              SerialPlotter.Protocol.Command.PLOTTER_SEND_MESSAGE,
-              message + lineEnding
-            );
-            setMessage("");
-          }}
         >
           Send
         </button>
+
         <Select
           className="singleselect lineending"
           classNamePrefix="select"
@@ -91,8 +97,8 @@ export function MessageToBoard({
             }
           }}
         />
-      </div>
-      <label>
+      </form>
+      <label className="interpolate">
         <span>Interpolate</span>
         <Switch
           checkedIcon={false}
@@ -106,10 +112,7 @@ export function MessageToBoard({
             setInterpolate(val);
 
             // send new interpolation mode to middleware
-            wsSend(
-              SerialPlotter.Protocol.Command.PLOTTER_SET_INTERPOLATE,
-              val.toString()
-            );
+            wsSend(SerialPlotter.Protocol.Command.PLOTTER_SET_INTERPOLATE, val);
           }}
           checked={cubicInterpolationMode === "monotone"}
         />
@@ -128,7 +131,7 @@ export function MessageToBoard({
                 setBaudrate(val.value);
                 wsSend(
                   SerialPlotter.Protocol.Command.PLOTTER_SET_BAUDRATE,
-                  val.value.toString()
+                  val.value
                 );
               }
             }}

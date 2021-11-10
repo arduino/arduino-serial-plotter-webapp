@@ -1,6 +1,11 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { ChartPlotter } from "./ChartPlotter";
-import { generateRandomMessages, SerialPlotter } from "./utils";
+import {
+  generateRandomMessages,
+  jumpyNamedVariables,
+  namedVariablesMulti,
+} from "./fakeMessagsGenerators";
+import { SerialPlotter } from "./utils";
 
 export default function App() {
   const [config, setConfig] = useState<SerialPlotter.Config | null>(null);
@@ -84,7 +89,7 @@ export default function App() {
   useEffect(() => {
     if (config?.generate) {
       const randomValuesInterval = setInterval(() => {
-        const messages = generateRandomMessages();
+        const messages = namedVariablesMulti();
         onMiddlewareMessage(messages);
       }, 32);
       return () => {

@@ -1,6 +1,6 @@
 {
   "name": "arduino-serial-plotter-webapp",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "dependencies": {},
   "scripts": {
     "start": "react-scripts start",
