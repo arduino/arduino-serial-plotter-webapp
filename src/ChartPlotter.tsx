@@ -2,12 +2,7 @@ import React, { useState, useRef, useImperativeHandle, useEffect } from "react";
 
 import { Line } from "react-chartjs-2";
 
-import {
-  addDataPoints,
-  resetDatapointCounter,
-  resetExistingDatasetsMap,
-  SerialPlotter,
-} from "./utils";
+import { addDataPoints, SerialPlotter } from "./utils";
 import { Legend } from "./Legend";
 import { Chart, ChartData, ChartOptions } from "chart.js";
 import "chartjs-adapter-luxon";
