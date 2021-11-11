@@ -2,7 +2,12 @@ import React, { useState, useRef, useImperativeHandle, useEffect } from "react";
 
 import { Line } from "react-chartjs-2";
 
-import { addDataPoints, SerialPlotter } from "./utils";
+import {
+  addDataPoints,
+  resetDatapointCounter,
+  resetExistingDatasetsMap,
+  SerialPlotter,
+} from "./utils";
 import { Legend } from "./Legend";
 import { Chart, ChartData, ChartOptions } from "chart.js";
 import "chartjs-adapter-luxon";
@@ -31,6 +36,7 @@ function _Chart(
 
   const [, setForceUpdate] = useState(0);
   const [pause, setPause] = useState(false);
+  const [connected, setConnected] = useState(config.connected);
   const [dataPointThreshold] = useState(50);
   const [cubicInterpolationMode, setCubicInterpolationMode] = useState<
     "default" | "monotone"
@@ -108,6 +114,26 @@ function _Chart(
     },
   });
 
+  useEffect(() => {
+    if (!config.connected) {
+      setConnected(false);
+      return;
+    }
+
+    // when the connection becomes connected, need to cleanup the previous state
+    if (!connected && config.connected) {
+      // cleanup any previous state
+      if (chartRef.current) {
+        chartRef.current.data.datasets = [];
+        chartRef.current.update();
+      }
+      resetExistingDatasetsMap();
+      resetDatapointCounter();
+      worker.postMessage({ command: "cleanup" });
+      setConnected(true);
+    }
+  }, [config.connected, connected]);
+
   const togglePause = (newState: boolean) => {
     if (newState === pause) {
       return;
@@ -141,7 +167,7 @@ function _Chart(
         return;
       }
       // upon message receival update the chart
-      worker.postMessage(data);
+      worker.postMessage({ data });
     },
   }));
 

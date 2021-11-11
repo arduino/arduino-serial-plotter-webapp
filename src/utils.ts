@@ -46,11 +46,19 @@ const lineColors = [
   "#F0E442",
   "#95A5A6",
 ];
-const existingDatasetsMap: {
+
+let existingDatasetsMap: {
   [key: string]: ChartDataset<"line">;
 } = {};
 
-let datapointCounter = 0;
+export const resetExistingDatasetsMap = () => {
+  existingDatasetsMap = {};
+};
+export const resetDatapointCounter = () => {
+  datapointCounter = 0;
+};
+
+export let datapointCounter = 0;
 
 export const addDataPoints = (
   parsedMessages: {

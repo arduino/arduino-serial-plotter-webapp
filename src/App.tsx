@@ -30,9 +30,22 @@ export default function App() {
         const { darkTheme, serialPort, connected } =
           message.data as SerialPlotter.Config;
 
-        document.title =
-          (serialPort || config?.serialPort || "/serial/port/address") +
-          ((!connected && " (disconnected)") || "");
+        let updateTitle = false;
+        let serialNameTitle = config?.serialPort;
+        if (typeof serialPort !== "undefined") {
+          serialNameTitle = serialPort;
+          updateTitle = true;
+        }
+
+        let connectedTitle = connected === false ? " (disconnected)" : "";
+        if (typeof connected !== "undefined") {
+          connectedTitle = connected === false ? " (disconnected)" : "";
+          updateTitle = true;
+        }
+
+        if (updateTitle) {
+          document.title = `${serialNameTitle}${connectedTitle}`;
+        }
 
         if (typeof darkTheme !== "undefined") {
           darkTheme

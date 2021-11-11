@@ -4,7 +4,15 @@ const ctx: Worker = self as any;
 
 // Respond to message from parent thread
 ctx.addEventListener("message", (event) => {
-  ctx.postMessage(parseSerialMessages(event.data));
+  const { command, data } = event.data;
+
+  if (command === "cleanup") {
+    buffer = "";
+  }
+
+  if (data) {
+    ctx.postMessage(parseSerialMessages(data));
+  }
 });
 
 let buffer = "";
@@ -38,11 +46,6 @@ export const parseSerialMessages = (
     .filter((message) => message !== separator)
     .forEach((message) => {
       const parsedLine: { [key: string]: number } = {};
-
-      // TODO: this drops messages that arrive too fast (keeping only the first one). Is this a problem?
-      //   if (parsedLines.length > 0) {
-      //     return;
-      //   }
 
       //there are two supported formats:
       // format1: <value1> <value2> <value3>
