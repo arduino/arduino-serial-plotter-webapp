@@ -171,6 +171,7 @@ function _Chart(
             chartRef={chartRef.current}
             setPause={togglePause}
             pause={pause}
+            config={config}
           />
         )}
         <div className="canvas-container">

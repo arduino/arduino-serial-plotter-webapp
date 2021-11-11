@@ -1,15 +1,18 @@
 import React from "react";
 import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 import { LegendItem } from "./LegendItem";
+import { SerialPlotter } from "./utils";
 
 export function Legend({
   chartRef,
   pause,
   setPause,
+  config,
 }: {
   chartRef: ChartJSOrUndefined<"line">;
   pause: boolean;
   setPause: (pause: boolean) => void;
+  config: SerialPlotter.Config;
 }): React.ReactElement {
   return (
     <div className="legend">
@@ -20,12 +23,15 @@ export function Legend({
       </div>
       <div className="actions">
         <button
+          disabled={!config.connected}
           className="pause-button"
+          title={config.connected ? undefined : "Serial disconnected"}
           onClick={() => {
+            if (!config.connected) return;
             setPause(!pause);
           }}
         >
-          {(pause && "RUN") || "STOP"}
+          {((pause || !config.connected) && "RUN") || "STOP"}
         </button>
         <button
           className="clear-button"

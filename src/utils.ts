@@ -9,6 +9,8 @@ export namespace SerialPlotter {
     darkTheme: boolean;
     wsPort: number;
     interpolate: boolean;
+    serialPort: string;
+    connected: boolean;
     generate?: boolean;
   };
   export namespace Protocol {

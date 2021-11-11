@@ -248,6 +248,10 @@ button {
   color: $white;
   padding: 6px 5px;
 
+  &[disabled] {
+    opacity: 0.5;
+  }
+
   &.disabled {
     opacity: 0.3;
   }

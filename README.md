@@ -20,14 +20,18 @@ The application is designed to be as agnostic as possible regarding how and wher
 
 ### Config Parameters
 
-The Serial Plotter Web App is initialized by passing a number of parameters in the URL, in the form of a QueryString (eg: http://localhost:3000?currentBaudrate=100&baudrates=300,1200,2400,4800,9600,19200,38400,57600,74880,115200,230400,250000,500000,1000000,2000000&darkTheme=true&wsPort=5000&interpolate=true&generate=true).
+The Serial Plotter Web App is initialized by passing a number of parameters in the URL, in the form of a QueryString (eg: http://localhost:3000?currentBaudrate=2400&baudrates=300,1200,2400,4800,9600,19200,38400,57600,74880,115200,230400,250000,500000,1000000,2000000&darkTheme=true&wsPort=5000&connected=true&interpolate=true&generate=true).
 
 | Name | Description | Type (default) |
 |-|-|-|
 | `currentBaudrate` | currently selected baudrate | Number(9600)|
+| `currentLineEnding` | currently selected line ending | String("\r\n")|
 | `baudrates` | populate the baudrates menu | String[]/Comma separated strings ([])|
 | `darkTheme` | whether to use the dark version of the plotter | Boolean(false) |
 | `wsPort` | websocket port used for communication | Number(3030) |
+| `interpolate` | whether to smooth the graph or not | Boolean(false) |
+| `serialPort` | name of the serial port the data is coming from | String("") |
+| `connected` | whether if the serial port is connected or not| Boolean(false) |
 | `generate` | generate fake datapoints to print random charts (dev purposes only)| Boolean(false) |
 
 It is possible to update the state of the serial plotter by sending the above parameters via WebSocket in the form of a JSON-stringified object, using the `MIDDLEWARE_CONFIG_CHANGED` [Command](#websocket-communication-protocol).

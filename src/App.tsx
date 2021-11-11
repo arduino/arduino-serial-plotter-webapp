@@ -27,7 +27,13 @@ export default function App() {
         SerialPlotter.Protocol.Command.MIDDLEWARE_CONFIG_CHANGED
       ) {
         // set document dark theme
-        const { darkTheme } = message.data as SerialPlotter.Config;
+        const { darkTheme, serialPort, connected } =
+          message.data as SerialPlotter.Config;
+
+        document.title =
+          (serialPort || config?.serialPort || "/serial/port/address") +
+          ((!connected && " (disconnected)") || "");
+
         if (typeof darkTheme !== "undefined") {
           darkTheme
             ? document.body.classList.add("dark")
@@ -70,6 +76,8 @@ export default function App() {
       darkTheme: urlParams.get("darkTheme") === "true",
       wsPort: parseInt(urlParams.get("wsPort") || "3030"),
       interpolate: urlParams.get("interpolate") === "true",
+      serialPort: urlParams.get("serialPort") || "/serial/port/address",
+      connected: urlParams.get("connected") === "true",
       generate: urlParams.get("generate") === "true",
     };
 
