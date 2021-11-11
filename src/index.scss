@@ -40,9 +40,8 @@
 
 body {
   font-family: 'Open Sans';
-
+  --bg-rga: 255, 255, 255;
   --text-color: #{$charcoal};
-  --chart-bg: #{$white};
   --message-to-board-bg: #{$clouds};
   --axis-labels-color: #{$charcoal};
   --axis-grid-color: #{$clouds};
@@ -54,7 +53,7 @@ body {
 
 body.dark {
   --text-color: #{$fog};
-  --chart-bg: #{$onyx};
+  --bg-rga: 23, 30, 33;
   --message-to-board-bg: #{$onyx};
   --axis-labels-color: #{$fog};
   --axis-grid-color: #{$charcoal};
@@ -65,6 +64,7 @@ body.dark {
 }
 
 body {
+  --chart-bg: rgba(var(--bg-rga), 1);
   color: var(--text-color);
   background-color: var(--chart-bg);
   margin: 0;
@@ -101,6 +101,61 @@ body {
     justify-content: space-between;
     margin: 10px 16px;
     align-items: center;
+
+    .scroll-wrap {
+      display: inline-flex;
+      flex: 1;
+      margin-right: 30px;
+      position: relative;
+      height: 29px;
+      overflow: hidden;
+      scroll-behavior: smooth;
+
+      .scrollbar {
+        div {
+          scroll-behavior: smooth;
+          bottom: -10px;
+        }
+      }
+
+      .chart-names {
+        white-space: nowrap;
+
+        label:first-child {
+          margin-left: 15px;
+        }
+      }
+  
+      .scroll-button {
+        border: none;
+        background: none;
+        box-shadow: none;
+        padding: 0;
+        height: 25px;
+        width: 35px;
+  
+        &.left {
+          text-align: left;
+          background: linear-gradient(90deg, var(--chart-bg) 60%, rgba(0, 0, 0, 0) 100%);
+          z-index: 1;
+          position: absolute;
+          left: 0;
+        }
+        &.right {
+            text-align: right;
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, var(--chart-bg) 40%);
+            z-index: 1;
+            position: absolute;
+            right: 0;
+        }
+    
+        svg {
+          path { fill: var(--text-color); }
+        }
+      }
+    }
+
+    
   
     label {
       user-select: none;

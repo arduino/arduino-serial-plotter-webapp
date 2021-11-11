@@ -17,7 +17,7 @@ export const generateRandomMessages = () => {
 };
 
 const genNamedVarValPair = (i: number) => {
-  const name = `name${i}`;
+  const name = `name ${i}`;
   const val = `${Math.floor(Math.random() * 10)}`;
   return `${name}:${val}`;
 };
@@ -26,7 +26,7 @@ const genNamedVarValPair = (i: number) => {
 export const namedVariables = () => {
   const messages: string[] = [];
 
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 7; i++) {
     let pair = genNamedVarValPair(i);
     messages.push(pair);
   }

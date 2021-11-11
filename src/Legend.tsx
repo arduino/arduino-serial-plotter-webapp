@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 import { LegendItem } from "./LegendItem";
 import { SerialPlotter } from "./utils";
+import { Scrollbars } from "react-custom-scrollbars";
 
 export function Legend({
   chartRef,
@@ -14,12 +15,83 @@ export function Legend({
   setPause: (pause: boolean) => void;
   config: SerialPlotter.Config;
 }): React.ReactElement {
+  const scrollRef = React.useRef<Scrollbars>(null);
+
+  const [showScrollArrows, setShowScrollArrows] = useState(false);
+
   return (
     <div className="legend">
-      <div>
-        {chartRef?.data.datasets.map((dataset, i) => (
-          <LegendItem dataset={dataset} key={i} chartRef={chartRef} />
-        ))}
+      <div className="scroll-wrap">
+        {showScrollArrows && (
+          <button
+            className="scroll-button left"
+            onClick={() => {
+              scrollRef.current?.scrollLeft(
+                scrollRef.current.getScrollLeft() - 100
+              );
+            }}
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 15 15"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.5 14.9375C8.971 14.9375 10.409 14.5013 11.6321 13.6841C12.8551 12.8668 13.8084 11.7052 14.3714 10.3462C14.9343 8.98718 15.0816 7.49175 14.7946 6.04902C14.5076 4.60628 13.7993 3.28105 12.7591 2.24089C11.719 1.20074 10.3937 0.492387 8.95098 0.205409C7.50825 -0.0815684 6.01282 0.0657188 4.65379 0.628645C3.29477 1.19157 2.13319 2.14486 1.31594 3.36795C0.498701 4.59104 0.0624998 6.029 0.0624997 7.5C0.0624995 9.47255 0.846091 11.3643 2.24089 12.7591C3.63569 14.1539 5.52745 14.9375 7.5 14.9375ZM4.99781 7.12281L8.18531 3.93531C8.2347 3.88552 8.29345 3.846 8.35819 3.81903C8.42293 3.79205 8.49237 3.77817 8.5625 3.77817C8.63263 3.77817 8.70207 3.79205 8.7668 3.81903C8.83154 3.846 8.8903 3.88552 8.93969 3.93531C8.98948 3.9847 9.029 4.04346 9.05597 4.10819C9.08294 4.17293 9.09683 4.24237 9.09683 4.3125C9.09683 4.38263 9.08294 4.45207 9.05597 4.51681C9.029 4.58154 8.98948 4.6403 8.93969 4.68969L6.12406 7.5L8.93969 10.3103C9.03972 10.4103 9.09592 10.546 9.09592 10.6875C9.09592 10.829 9.03972 10.9647 8.93969 11.0647C8.83965 11.1647 8.70397 11.2209 8.5625 11.2209C8.42102 11.2209 8.28535 11.1647 8.18531 11.0647L4.99781 7.87719C4.94802 7.8278 4.9085 7.76904 4.88152 7.70431C4.85455 7.63957 4.84067 7.57013 4.84067 7.5C4.84067 7.42987 4.85455 7.36043 4.88152 7.29569C4.9085 7.23096 4.94802 7.1722 4.99781 7.12281Z"
+                fill="#424242"
+              />
+            </svg>
+          </button>
+        )}
+        <Scrollbars
+          ref={scrollRef}
+          className="scrollbar"
+          hideTracksWhenNotNeeded={true}
+          style={{
+            height: "29px",
+            marginRight: "17px",
+            marginLeft: showScrollArrows ? "17px" : "-5px",
+          }}
+          onUpdate={() => {
+            setShowScrollArrows(
+              (scrollRef.current &&
+                scrollRef.current?.getClientWidth() <
+                  scrollRef.current?.getScrollWidth()) ||
+                false
+            );
+          }}
+        >
+          <div className="chart-names">
+            {chartRef?.data.datasets.map((dataset, i) => (
+              <LegendItem dataset={dataset} key={i} chartRef={chartRef} />
+            ))}
+          </div>
+        </Scrollbars>
+        {showScrollArrows && (
+          <button
+            className="scroll-button right"
+            onClick={() =>
+              scrollRef.current?.scrollLeft(
+                scrollRef.current.getScrollLeft() + 100
+              )
+            }
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 15 15"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.5 0.0625C6.029 0.0625 4.59104 0.498702 3.36795 1.31594C2.14486 2.13319 1.19158 3.29477 0.628649 4.65379C0.0657225 6.01282 -0.0815647 7.50825 0.205413 8.95098C0.49239 10.3937 1.20074 11.719 2.2409 12.7591C3.28105 13.7993 4.60629 14.5076 6.04902 14.7946C7.49175 15.0816 8.98718 14.9343 10.3462 14.3714C11.7052 13.8084 12.8668 12.8551 13.6841 11.6321C14.5013 10.409 14.9375 8.971 14.9375 7.5C14.9375 5.52745 14.1539 3.63569 12.7591 2.24089C11.3643 0.846091 9.47255 0.0625 7.5 0.0625ZM10.0022 7.87719L6.81469 11.0647C6.7653 11.1145 6.70655 11.154 6.64181 11.181C6.57707 11.2079 6.50763 11.2218 6.4375 11.2218C6.36737 11.2218 6.29793 11.2079 6.2332 11.181C6.16846 11.154 6.1097 11.1145 6.06032 11.0647C6.01052 11.0153 5.971 10.9565 5.94403 10.8918C5.91706 10.8271 5.90317 10.7576 5.90317 10.6875C5.90317 10.6174 5.91706 10.5479 5.94403 10.4832C5.971 10.4185 6.01052 10.3597 6.06032 10.3103L8.87594 7.5L6.06032 4.68969C5.96028 4.58965 5.90408 4.45397 5.90408 4.3125C5.90408 4.17103 5.96028 4.03535 6.06032 3.93531C6.16035 3.83528 6.29603 3.77908 6.4375 3.77908C6.57898 3.77908 6.71465 3.83528 6.81469 3.93531L10.0022 7.12281C10.052 7.1722 10.0915 7.23096 10.1185 7.29569C10.1454 7.36043 10.1593 7.42987 10.1593 7.5C10.1593 7.57013 10.1454 7.63957 10.1185 7.70431C10.0915 7.76904 10.052 7.8278 10.0022 7.87719Z"
+                fill="#2C353A"
+              />
+            </svg>
+          </button>
+        )}
       </div>
       <div className="actions">
         <button
