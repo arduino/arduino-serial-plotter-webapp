@@ -1,10 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { ChartPlotter } from "./ChartPlotter";
-import {
-  generateRandomMessages,
-  jumpyNamedVariables,
-  namedVariablesMulti,
-} from "./fakeMessagsGenerators";
+import { namedVariablesMulti } from "./fakeMessagsGenerators";
 import { SerialPlotter } from "./utils";
 
 export default function App() {

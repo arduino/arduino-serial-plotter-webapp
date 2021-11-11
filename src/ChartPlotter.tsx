@@ -1,8 +1,8 @@
-import React, { useState, useRef, useImperativeHandle } from "react";
+import React, { useState, useRef, useImperativeHandle, useEffect } from "react";
 
 import { Line } from "react-chartjs-2";
 
-import { addDataPoints, parseSerialMessages, SerialPlotter } from "./utils";
+import { addDataPoints, SerialPlotter } from "./utils";
 import { Legend } from "./Legend";
 import { Chart, ChartData, ChartOptions } from "chart.js";
 import "chartjs-adapter-luxon";
@@ -12,6 +12,10 @@ import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 import { MessageToBoard } from "./MessageToBoard";
 
 Chart.register(ChartStreaming);
+
+// eslint-disable-next-line
+import Worker from "worker-loader!./msgAggregatorWorker";
+const worker = new Worker();
 
 function _Chart(
   {
@@ -137,16 +141,27 @@ function _Chart(
         return;
       }
       // upon message receival update the chart
+      worker.postMessage(data);
+    },
+  }));
+
+  useEffect(() => {
+    const addData = (event: MessageEvent<any>) => {
       addDataPoints(
-        parseSerialMessages(data),
+        event.data,
         chartRef.current,
         opts,
         cubicInterpolationMode,
         dataPointThreshold,
         setForceUpdate
       );
-    },
-  }));
+    };
+    worker.addEventListener("message", addData);
+
+    return () => {
+      worker.removeEventListener("message", addData);
+    };
+  }, [cubicInterpolationMode, opts, dataPointThreshold]);
 
   return (
     <>
