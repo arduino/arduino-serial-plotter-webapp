@@ -26,7 +26,6 @@ export default function App() {
         message.command ===
         SerialPlotter.Protocol.Command.MIDDLEWARE_CONFIG_CHANGED
       ) {
-        // set document dark theme
         const { darkTheme, serialPort, connected } =
           message.data as SerialPlotter.Config;
 

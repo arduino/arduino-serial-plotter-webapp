@@ -122,13 +122,7 @@ function _Chart(
 
     // when the connection becomes connected, need to cleanup the previous state
     if (!connected && config.connected) {
-      // cleanup any previous state
-      if (chartRef.current) {
-        chartRef.current.data.datasets = [];
-        chartRef.current.update();
-      }
-      resetExistingDatasetsMap();
-      resetDatapointCounter();
+      // cleanup buffer state
       worker.postMessage({ command: "cleanup" });
       setConnected(true);
     }

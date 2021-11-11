@@ -139,7 +139,10 @@ export const addDataPoints = (
 
         // purge the data if we need to remove all points
         if (dataset.data.length === delCount) {
-          dataset.data = [];
+          // remove the whole dataset from the chart and the map
+          delete existingDatasetsMap[dataset.label!];
+          chart.data.datasets.splice(s, 1);
+          setForceUpdate(-1);
         }
       }
     }
