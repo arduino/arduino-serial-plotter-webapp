@@ -38,8 +38,11 @@
        url('./fonts/open-sans-600.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
 }
 
-body {
+* {
   font-family: 'Open Sans';
+}
+
+body {
   --bg-rga: 255, 255, 255;
   --text-color: #{$charcoal};
   --message-to-board-bg: #{$clouds};
@@ -52,8 +55,8 @@ body {
 }
 
 body.dark {
-  --text-color: #{$fog};
   --bg-rga: 23, 30, 33;
+  --text-color: #{$fog};
   --message-to-board-bg: #{$onyx};
   --axis-labels-color: #{$fog};
   --axis-grid-color: #{$charcoal};
@@ -174,6 +177,10 @@ body {
       line-height: 13px;
       background-color: var(--chart-bg);
       margin-right: 5px ;
+
+      img {
+        width: 10px;
+      }
     }
   
     .actions {
@@ -197,6 +204,9 @@ body {
     flex: 1;
     position: relative;
     height: 50vh;
+    padding-left: 15px;
+    padding-right: 5px;
+    cursor: crosshair;
   }
 
 }
@@ -232,6 +242,10 @@ body {
       }
     }
   }
+
+  .select__value-container {
+    padding-left: 4px;
+  }
   
   .select__single-value {
     padding: 1px 2px;
@@ -245,6 +259,11 @@ body {
     padding: 4px;
     &:hover {
       color: inherit;
+    }
+
+    svg {
+      width: 15px;
+      height: 15px;
     }
   }
   .select__menu-list{
@@ -290,7 +309,7 @@ input[type="text"]{
   padding: 6px 5px;
 }
 
-*::placeholder {
+::placeholder {
   color: #7F8C8D !important;
 }
 

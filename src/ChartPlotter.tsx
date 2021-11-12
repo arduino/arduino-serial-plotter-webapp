@@ -48,6 +48,7 @@ function _Chart(
     datasets: {
       line: {
         pointRadius: 0,
+        pointHoverRadius: 0,
       },
     },
     interaction: {
@@ -55,7 +56,14 @@ function _Chart(
     },
     plugins: {
       tooltip: {
+        caretPadding: 9,
         enabled: false, // tooltips are enabled on stop only
+        bodyFont: {
+          family: "Open Sans",
+        },
+        titleFont: {
+          family: "Open Sans",
+        },
       },
       decimation: {
         enabled: true,
@@ -77,6 +85,9 @@ function _Chart(
         },
         ticks: {
           color: config.darkTheme ? "#DAE3E3" : "#2C353A",
+          font: {
+            family: "Open Sans",
+          },
         },
         grace: "5%",
       },
@@ -86,11 +97,15 @@ function _Chart(
         },
         display: true,
         ticks: {
+          font: {
+            family: "Open Sans",
+          },
           color: config.darkTheme ? "#DAE3E3" : "#2C353A",
           count: 5,
           callback: (value) => {
             return parseInt(value.toString(), 10);
           },
+          align: "center",
         },
         type: "linear",
         bounds: "data",
@@ -132,6 +147,7 @@ function _Chart(
     }
     setPause(newState);
     (opts.plugins as any).tooltip.enabled = newState;
+    opts.datasets!.line!.pointHoverRadius = newState ? 3 : 0;
     setOpts(opts);
   };
 
