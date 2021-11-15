@@ -1,23 +1,19 @@
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import { SerialPlotter } from "./utils";
-import Switch from "react-switch";
 
 export function MessageToBoard({
   config,
-  cubicInterpolationMode,
-  setInterpolate,
-  websocket,
+  wsSend,
 }: {
   config: SerialPlotter.Config;
-  cubicInterpolationMode: "monotone" | "default";
-  setInterpolate: (interpolate: boolean) => void;
-  websocket: React.MutableRefObject<WebSocket | null>;
+  wsSend: (command: string, data: string | number | boolean) => void;
 }): React.ReactElement {
   const [message, setMessage] = useState("");
 
   const [baudRate, setBaudrate] = useState(config.currentBaudrate);
   const [lineEnding, setLineEnding] = useState(config.currentLineEnding);
+  const [disabled, setDisabled] = useState(!config.connected);
 
   useEffect(() => {
     setBaudrate(config.currentBaudrate);
@@ -26,6 +22,10 @@ export function MessageToBoard({
   useEffect(() => {
     setLineEnding(config.currentLineEnding);
   }, [config.currentLineEnding]);
+
+  useEffect(() => {
+    setDisabled(!config.connected);
+  }, [config.connected]);
 
   const lineendings = [
     { value: "", label: "No Line Ending" },
@@ -38,17 +38,6 @@ export function MessageToBoard({
     value: baud,
     label: `${baud} baud`,
   }));
-
-  const wsSend = (command: string, data: string | number | boolean) => {
-    if (websocket && websocket?.current?.readyState === WebSocket.OPEN) {
-      websocket.current.send(
-        JSON.stringify({
-          command,
-          data,
-        })
-      );
-    }
-  };
 
   return (
     <div className="message-to-board">
@@ -65,15 +54,17 @@ export function MessageToBoard({
         }}
       >
         <input
+          className="message-to-board-input"
           type="text"
+          disabled={disabled}
           value={message}
           onChange={(event) => setMessage(event.target.value)}
           placeholder="Type Message"
         />
         <button
           type="submit"
-          className={message.length === 0 ? "disabled" : ""}
-          disabled={message.length === 0}
+          className={"message-to-board-send-button"}
+          disabled={message.length === 0 || disabled}
         >
           Send
         </button>
@@ -81,6 +72,7 @@ export function MessageToBoard({
         <Select
           className="singleselect lineending"
           classNamePrefix="select"
+          isDisabled={disabled}
           value={
             lineendings[lineendings.findIndex((l) => l.value === lineEnding)]
           }
@@ -98,30 +90,13 @@ export function MessageToBoard({
           }}
         />
       </form>
-      <label className="interpolate">
-        <span>Interpolate</span>
-        <Switch
-          checkedIcon={false}
-          uncheckedIcon={false}
-          height={20}
-          width={37}
-          handleDiameter={14}
-          offColor="#C9D2D2"
-          onColor="#008184"
-          onChange={(val) => {
-            setInterpolate(val);
 
-            // send new interpolation mode to middleware
-            wsSend(SerialPlotter.Protocol.Command.PLOTTER_SET_INTERPOLATE, val);
-          }}
-          checked={cubicInterpolationMode === "monotone"}
-        />
-      </label>
       <div>
         <div className="baud">
           <Select
             className="singleselect"
             classNamePrefix="select"
+            isDisabled={disabled}
             value={baudrates[baudrates.findIndex((b) => b.value === baudRate)]}
             name="baudrate"
             options={baudrates}

@@ -88,14 +88,13 @@ body {
     padding: 0 20px;
     align-items: center;
 
-    .interpolate {
-      display: flex;
-      align-items: center;
 
-      span {
-        margin-right: 10px;
-        font-size: 14px;
-      }
+    .message-to-board-input {
+      width: 205px;
+    }
+
+    .message-to-board-send-button {
+      width: 45px;
     }
   }
 
@@ -108,11 +107,12 @@ body {
     .scroll-wrap {
       display: inline-flex;
       flex: 1;
-      margin-right: 30px;
+      margin-right: 20px;
       position: relative;
       height: 29px;
       overflow: hidden;
       scroll-behavior: smooth;
+      align-items: center;
 
       .scrollbar {
         div {
@@ -127,6 +127,11 @@ body {
         }
       }
 
+      div {
+        display: flex;
+        align-items: center;
+      }
+      
       .chart-names {
         white-space: nowrap;
 
@@ -142,6 +147,8 @@ body {
         padding: 0;
         height: 25px;
         width: 35px;
+        display: flex;
+        align-items: center;
   
         &.left {
           text-align: left;
@@ -153,6 +160,7 @@ body {
           width: 45px;
         }
         &.right {
+            flex-direction: row-reverse;
             text-align: right;
             background: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, var(--chart-bg) 40%);
             z-index: 1;
@@ -193,7 +201,17 @@ body {
   
     .actions {
       display: inline-flex;
+ 
+      .interpolate {
+        display: flex;
+        align-items: center;
   
+        span {
+          margin-right: 10px;
+          font-size: 14px;
+        }
+      }
+
       .clear-button {
         border: none;
         background: none;
@@ -234,6 +252,10 @@ body {
 .singleselect {
   min-width: 155px;
   font-size: 12px;
+
+  &.select--is-disabled {
+    opacity: 0.5;
+  }
   
   .select__control {
     min-height: 0;
@@ -315,6 +337,9 @@ input[type="text"]{
   border: 1px solid var(--inputtext-border-color);
   border-radius: 1px;
   padding: 6px 5px;
+  &[disabled] {
+    opacity: 0.5;
+  }
 }
 
 ::placeholder {
@@ -332,9 +357,5 @@ button {
 
   &[disabled] {
     opacity: 0.5;
-  }
-
-  &.disabled {
-    opacity: 0.3;
   }
 }

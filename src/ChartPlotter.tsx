@@ -194,26 +194,35 @@ function _Chart(
     };
   }, [cubicInterpolationMode, opts, dataPointThreshold]);
 
+  const wsSend = (command: string, data: string | number | boolean) => {
+    if (websocket && websocket?.current?.readyState === WebSocket.OPEN) {
+      websocket.current.send(
+        JSON.stringify({
+          command,
+          data,
+        })
+      );
+    }
+  };
+
   return (
     <>
       <div className="chart-container">
         {chartRef.current && (
           <Legend
             chartRef={chartRef.current}
-            setPause={togglePause}
             pause={pause}
             config={config}
+            cubicInterpolationMode={cubicInterpolationMode}
+            wsSend={wsSend}
+            setPause={togglePause}
+            setInterpolate={setInterpolate}
           />
         )}
         <div className="canvas-container">
           <Line data={initialData} ref={chartRef as any} options={opts} />
         </div>
-        <MessageToBoard
-          config={config}
-          cubicInterpolationMode={cubicInterpolationMode}
-          setInterpolate={setInterpolate}
-          websocket={websocket}
-        />
+        <MessageToBoard config={config} wsSend={wsSend} />
       </div>
     </>
   );

@@ -3,17 +3,24 @@ import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 import { LegendItem } from "./LegendItem";
 import { SerialPlotter } from "./utils";
 import { Scrollbars } from "react-custom-scrollbars";
+import Switch from "react-switch";
 
 export function Legend({
   chartRef,
   pause,
-  setPause,
   config,
+  cubicInterpolationMode,
+  wsSend,
+  setPause,
+  setInterpolate,
 }: {
   chartRef: ChartJSOrUndefined<"line">;
   pause: boolean;
-  setPause: (pause: boolean) => void;
   config: SerialPlotter.Config;
+  cubicInterpolationMode: "monotone" | "default";
+  wsSend: (command: string, data: string | number | boolean) => void;
+  setPause: (pause: boolean) => void;
+  setInterpolate: (interpolate: boolean) => void;
 }): React.ReactElement {
   const scrollRef = useRef<Scrollbars>(null);
 
@@ -118,6 +125,28 @@ export function Legend({
         )}
       </div>
       <div className="actions">
+        <label className="interpolate">
+          <span>Interpolate</span>
+          <Switch
+            checkedIcon={false}
+            uncheckedIcon={false}
+            height={20}
+            width={37}
+            handleDiameter={14}
+            offColor="#C9D2D2"
+            onColor="#008184"
+            onChange={(val) => {
+              setInterpolate(val);
+
+              // send new interpolation mode to middleware
+              wsSend(
+                SerialPlotter.Protocol.Command.PLOTTER_SET_INTERPOLATE,
+                val
+              );
+            }}
+            checked={cubicInterpolationMode === "monotone"}
+          />
+        </label>
         <button
           disabled={!config.connected}
           className="pause-button"
