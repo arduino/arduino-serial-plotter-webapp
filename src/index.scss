@@ -102,7 +102,7 @@ body {
   .legend {
     display: flex;
     justify-content: space-between;
-    margin: 10px 16px;
+    margin: 10px 25px 10px 32px;
     align-items: center;
 
     .scroll-wrap {
@@ -116,8 +116,14 @@ body {
 
       .scrollbar {
         div {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
           scroll-behavior: smooth;
           bottom: -10px;
+
+          &::-webkit-scrollbar {
+            display: none;
+          }
         }
       }
 
@@ -142,7 +148,9 @@ body {
           background: linear-gradient(90deg, var(--chart-bg) 60%, rgba(0, 0, 0, 0) 100%);
           z-index: 1;
           position: absolute;
+          padding-left: 10px;
           left: 0;
+          width: 45px;
         }
         &.right {
             text-align: right;

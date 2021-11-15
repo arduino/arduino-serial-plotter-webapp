@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 import { LegendItem } from "./LegendItem";
 import { SerialPlotter } from "./utils";
@@ -15,14 +15,45 @@ export function Legend({
   setPause: (pause: boolean) => void;
   config: SerialPlotter.Config;
 }): React.ReactElement {
-  const scrollRef = React.useRef<Scrollbars>(null);
+  const scrollRef = useRef<Scrollbars>(null);
 
-  const [showScrollArrows, setShowScrollArrows] = useState(false);
+  const [showScrollLeft, setShowScrollLeft] = useState(false);
+  const [showScrollRight, setShowScrollRight] = useState(false);
 
+  const checkScrollArrows = () => {
+    if (
+      scrollRef.current &&
+      scrollRef.current.getClientWidth() < scrollRef.current.getScrollWidth()
+    ) {
+      setShowScrollLeft(true);
+      setShowScrollRight(true);
+      if (scrollRef.current.getScrollLeft() === 0) setShowScrollLeft(false);
+      if (
+        scrollRef.current.getScrollLeft() +
+          scrollRef.current.getClientWidth() ===
+        scrollRef.current.getScrollWidth()
+      )
+        setShowScrollRight(false);
+    } else {
+      setShowScrollLeft(false);
+      setShowScrollRight(false);
+    }
+  };
+
+  useEffect(() => {
+    checkScrollArrows();
+  }, [chartRef, pause, setPause, config]);
+
+  useEffect(() => {
+    window.addEventListener("resize", checkScrollArrows);
+    return () => {
+      window.removeEventListener("resize", checkScrollArrows);
+    };
+  }, []);
   return (
     <div className="legend">
       <div className="scroll-wrap">
-        {showScrollArrows && (
+        {showScrollLeft && (
           <button
             className="scroll-button left"
             onClick={() => {
@@ -52,16 +83,9 @@ export function Legend({
           style={{
             height: "29px",
             marginRight: "17px",
-            marginLeft: showScrollArrows ? "17px" : "-5px",
+            marginLeft: "-5px",
           }}
-          onUpdate={() => {
-            setShowScrollArrows(
-              (scrollRef.current &&
-                scrollRef.current?.getClientWidth() <
-                  scrollRef.current?.getScrollWidth()) ||
-                false
-            );
-          }}
+          onScroll={checkScrollArrows}
         >
           <div className="chart-names">
             {chartRef?.data.datasets.map((dataset, i) => (
@@ -69,7 +93,7 @@ export function Legend({
             ))}
           </div>
         </Scrollbars>
-        {showScrollArrows && (
+        {showScrollRight && (
           <button
             className="scroll-button right"
             onClick={() =>
