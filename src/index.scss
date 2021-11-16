@@ -88,6 +88,9 @@ body {
     padding: 0 20px;
     align-items: center;
 
+    .message-container {
+      display: flex;
+    }
 
     .message-to-board-input {
       width: 205px;
