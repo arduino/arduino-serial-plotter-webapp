@@ -51,9 +51,9 @@ export const parseSerialMessages = (
       // format1: <value1> <value2> <value3>
       // format2: name1:<value1>,name2:<value2>,name3:<value3>
 
-      // if we find a comma, we assume the latter is being used
+      // if we find a colon, we assume the latter is being used
       let tokens: string[] = [];
-      if (message.indexOf(",") > 0) {
+      if (message.indexOf(":") > 0) {
         message.split(",").forEach((keyValue: string) => {
           let [key, value] = keyValue.split(":");
           key = key && key.trim();
