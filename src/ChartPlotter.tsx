@@ -208,17 +208,15 @@ function _Chart(
   return (
     <>
       <div className="chart-container">
-        {chartRef.current && (
-          <Legend
-            chartRef={chartRef.current}
-            pause={pause}
-            config={config}
-            cubicInterpolationMode={cubicInterpolationMode}
-            wsSend={wsSend}
-            setPause={togglePause}
-            setInterpolate={setInterpolate}
-          />
-        )}
+        <Legend
+          chartRef={chartRef.current}
+          pause={pause}
+          config={config}
+          cubicInterpolationMode={cubicInterpolationMode}
+          wsSend={wsSend}
+          setPause={togglePause}
+          setInterpolate={setInterpolate}
+        />
         <div className="canvas-container">
           <Line data={initialData} ref={chartRef as any} options={opts} />
         </div>
