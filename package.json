@@ -1,6 +1,6 @@
 {
   "name": "arduino-serial-plotter-webapp",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "dependencies": {},
   "license": "AGPL",
   "scripts": {
