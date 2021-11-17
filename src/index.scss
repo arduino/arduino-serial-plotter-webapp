@@ -357,6 +357,7 @@ button {
   border-radius: 1px;
   color: $white;
   padding: 6px 5px;
+  cursor: pointer;
 
   &[disabled] {
     opacity: 0.5;
