@@ -54,7 +54,8 @@ export default function App() {
         setConfig({ ...config, ...message.data });
       }
     },
-    [setConfig, config]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [config, setConfig]
   );
 
   // as soon as the wsPort is set, create a websocket connection
@@ -63,6 +64,7 @@ export default function App() {
       return;
     }
 
+    console.log(`opening ws connection on localhost:${config?.wsPort}`);
     websocket.current = new WebSocket(`ws://localhost:${config?.wsPort}`);
     websocket.current.onmessage = (res: any) => {
       const message: SerialPlotter.Protocol.Message = JSON.parse(res.data);
@@ -71,9 +73,11 @@ export default function App() {
     const wsCurrent = websocket.current;
 
     return () => {
+      console.log("closing ws connection");
       wsCurrent.close();
     };
-  }, [config?.wsPort, onMiddlewareMessage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config?.wsPort]);
 
   // at bootstrap read params from the URL
   useEffect(() => {
@@ -99,7 +103,7 @@ export default function App() {
         data: urlSettings,
       });
     }
-  }, [onMiddlewareMessage, config]);
+  }, [config, onMiddlewareMessage]);
 
   // If in "generate" mode, create fake data
   useEffect(() => {

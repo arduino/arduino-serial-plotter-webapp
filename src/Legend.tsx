@@ -37,7 +37,7 @@ export function Legend({
       if (scrollRef.current.getScrollLeft() === 0) setShowScrollLeft(false);
       if (
         scrollRef.current.getScrollLeft() +
-          scrollRef.current.getClientWidth() ===
+          scrollRef.current.getClientWidth() >=
         scrollRef.current.getScrollWidth()
       )
         setShowScrollRight(false);
@@ -86,7 +86,10 @@ export function Legend({
         <Scrollbars
           ref={scrollRef}
           className="scrollbar"
-          hideTracksWhenNotNeeded={true}
+          renderTrackVertical={(props) => <div {...props} className="track" />}
+          renderTrackHorizontal={(props) => (
+            <div {...props} className="track" />
+          )}
           style={{
             height: "29px",
             marginRight: "17px",
