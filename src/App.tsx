@@ -51,7 +51,7 @@ export default function App() {
             ? document.body.classList.add("dark")
             : document.body.classList.remove("dark");
         }
-        setConfig({ ...config, ...message.data });
+        setConfig((c) => ({ ...c, ...message.data }));
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
