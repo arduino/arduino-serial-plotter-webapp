@@ -54,8 +54,7 @@ export default function App() {
         setConfig((c) => ({ ...c, ...message.data }));
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [config, setConfig]
+    [config?.serialPort]
   );
 
   // as soon as the wsPort is set, create a websocket connection
