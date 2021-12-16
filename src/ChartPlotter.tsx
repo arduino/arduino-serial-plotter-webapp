@@ -146,6 +146,8 @@ function _Chart(
       (chartRef.current as any).options.scales.x.realtime.pause = pause;
     }
     setPause(newState);
+    worker.postMessage({ command: "cleanup" });
+    enableTooltips(newState);
     (opts.plugins as any).tooltip.enabled = newState;
     opts.datasets!.line!.pointHoverRadius = newState ? 3 : 0;
     setOpts(opts);
