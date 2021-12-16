@@ -1,4 +1,10 @@
-import React, { useState, useRef, useImperativeHandle, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useImperativeHandle,
+  useEffect,
+  useCallback,
+} from "react";
 
 import { Line } from "react-chartjs-2";
 
@@ -124,9 +130,21 @@ function _Chart(
     },
   });
 
+  const enableTooltips = useCallback(
+    (newState: boolean) => {
+      (opts.plugins as any).tooltip.enabled = newState;
+      opts.datasets!.line!.pointHoverRadius = newState ? 3 : 0;
+      setOpts(opts);
+      chartRef.current?.update();
+    },
+    [opts]
+  );
+
   useEffect(() => {
     if (!config.connected) {
       setConnected(false);
+      // when disconnected, force tooltips to be enabled
+      enableTooltips(true);
       return;
     }
 
@@ -135,8 +153,11 @@ function _Chart(
       // cleanup buffer state
       worker.postMessage({ command: "cleanup" });
       setConnected(true);
+
+      // restore the tooltips state (which match the pause state when connected)
+      enableTooltips(pause);
     }
-  }, [config.connected, connected]);
+  }, [config.connected, connected, pause, enableTooltips]);
 
   const togglePause = (newState: boolean) => {
     if (newState === pause) {
@@ -148,9 +169,6 @@ function _Chart(
     setPause(newState);
     worker.postMessage({ command: "cleanup" });
     enableTooltips(newState);
-    (opts.plugins as any).tooltip.enabled = newState;
-    opts.datasets!.line!.pointHoverRadius = newState ? 3 : 0;
-    setOpts(opts);
   };
 
   const setInterpolate = (interpolate: boolean) => {
