@@ -17,10 +17,11 @@ import ChartStreaming from "chartjs-plugin-streaming";
 import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 import { MessageToBoard } from "./MessageToBoard";
 
-Chart.register(ChartStreaming);
-
 // eslint-disable-next-line
 import Worker from "worker-loader!./msgAggregatorWorker";
+import { Snackbar } from "@arduino/arc";
+
+Chart.register(ChartStreaming);
 const worker = new Worker();
 
 function _Chart(
@@ -241,6 +242,22 @@ function _Chart(
           <Line data={initialData} ref={chartRef as any} options={opts} />
         </div>
         <MessageToBoard config={config} wsSend={wsSend} />
+
+        {!connected && (
+          <Snackbar
+            anchorOrigin={{
+              horizontal: "center",
+              vertical: "bottom",
+            }}
+            autoHideDuration={7000}
+            className="snackbar"
+            closeable
+            isOpen
+            message="Board disconnected"
+            theme={config.darkTheme ? "dark" : "light"}
+            turnOffAutoHide
+          />
+        )}
       </div>
     </>
   );

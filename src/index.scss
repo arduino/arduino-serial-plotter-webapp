@@ -73,6 +73,13 @@ body {
   margin: 0;
 }
 
+.snackbar {
+  outline: none;
+  * {
+    outline: none;
+  }
+}
+
 .chart-container {
   display: flex;
   flex-direction: column;
