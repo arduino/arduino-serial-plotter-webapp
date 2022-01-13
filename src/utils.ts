@@ -84,7 +84,10 @@ export const addDataPoints = (
     // add missing datasets to the chart
     existingDatasetNames.length < 8 &&
       datasetNames.forEach((datasetName) => {
-        if (!existingDatasetNames.includes(datasetName)) {
+        if (
+          !existingDatasetNames.includes(datasetName) &&
+          existingDatasetNames.length < 8
+        ) {
           const newDataset = {
             data: [],
             label: datasetName,

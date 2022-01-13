@@ -1,7 +1,8 @@
 {
   "name": "arduino-serial-plotter-webapp",
-  "version": "0.0.15",
-  "dependencies": {},
+  "version": "0.0.17",
+  "dependencies": {
+  },
   "license": "AGPL",
   "scripts": {
     "start": "react-scripts start",
@@ -32,6 +33,7 @@
     ]
   },
   "devDependencies": {
+    "@arduino/arc": "^0.9.1",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
@@ -52,6 +54,7 @@
     "node-sass": "^6.0.1",
     "prettier": "^2.4.1",
     "react": "^17.0.2",
+    "react-aria": "^3.0.0",
     "react-chartjs-2": "^3.3.0",
     "react-custom-scrollbars": "^4.2.1",
     "react-dom": "^17.0.2",

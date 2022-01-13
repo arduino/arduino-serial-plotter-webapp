@@ -8,6 +8,7 @@ ctx.addEventListener("message", (event) => {
 
   if (command === "cleanup") {
     buffer = "";
+    discardFirstLine = true;
   }
 
   if (data) {
@@ -16,6 +17,7 @@ ctx.addEventListener("message", (event) => {
 });
 
 let buffer = "";
+let discardFirstLine = true;
 const separator = "\r\n";
 var re = new RegExp(`(${separator})`, "g");
 
@@ -25,8 +27,26 @@ export const parseSerialMessages = (
   datasetNames: string[];
   parsedLines: { [key: string]: number }[];
 } => {
+  // when the serial is real fast, the first line can be incomplete and contain incomplete messages
+  // so we need to discard it and start aggregating from the first encountered separator
+  let joinMessages = messages.join("");
+  if (discardFirstLine) {
+    const firstSeparatorIndex = joinMessages.indexOf(separator);
+    if (firstSeparatorIndex > -1) {
+      joinMessages = joinMessages.substring(
+        firstSeparatorIndex + separator.length
+      );
+      discardFirstLine = false;
+    } else {
+      return {
+        datasetNames: [],
+        parsedLines: [],
+      };
+    }
+  }
+
   //add any leftover from the buffer to the first line
-  const messagesAndBuffer = (buffer + messages.join(""))
+  const messagesAndBuffer = ((buffer || "") + joinMessages)
     .split(re)
     .filter((message) => message.length > 0);
 

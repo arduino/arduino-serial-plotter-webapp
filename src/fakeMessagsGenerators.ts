@@ -26,7 +26,7 @@ const genNamedVarValPair = (i: number) => {
 export const namedVariables = () => {
   const messages: string[] = [];
 
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 1; i <= 9; i++) {
     let pair = genNamedVarValPair(i);
     messages.push(pair);
   }

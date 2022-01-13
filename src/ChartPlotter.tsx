@@ -1,4 +1,10 @@
-import React, { useState, useRef, useImperativeHandle, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useImperativeHandle,
+  useEffect,
+  useCallback,
+} from "react";
 
 import { Line } from "react-chartjs-2";
 
@@ -11,10 +17,11 @@ import ChartStreaming from "chartjs-plugin-streaming";
 import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 import { MessageToBoard } from "./MessageToBoard";
 
-Chart.register(ChartStreaming);
-
 // eslint-disable-next-line
 import Worker from "worker-loader!./msgAggregatorWorker";
+import { Snackbar } from "@arduino/arc";
+
+Chart.register(ChartStreaming);
 const worker = new Worker();
 
 function _Chart(
@@ -124,9 +131,21 @@ function _Chart(
     },
   });
 
+  const enableTooltips = useCallback(
+    (newState: boolean) => {
+      (opts.plugins as any).tooltip.enabled = newState;
+      opts.datasets!.line!.pointHoverRadius = newState ? 3 : 0;
+      setOpts(opts);
+      chartRef.current?.update();
+    },
+    [opts]
+  );
+
   useEffect(() => {
     if (!config.connected) {
       setConnected(false);
+      // when disconnected, force tooltips to be enabled
+      enableTooltips(true);
       return;
     }
 
@@ -135,8 +154,11 @@ function _Chart(
       // cleanup buffer state
       worker.postMessage({ command: "cleanup" });
       setConnected(true);
+
+      // restore the tooltips state (which match the pause state when connected)
+      enableTooltips(pause);
     }
-  }, [config.connected, connected]);
+  }, [config.connected, connected, pause, enableTooltips]);
 
   const togglePause = (newState: boolean) => {
     if (newState === pause) {
@@ -146,9 +168,8 @@ function _Chart(
       (chartRef.current as any).options.scales.x.realtime.pause = pause;
     }
     setPause(newState);
-    (opts.plugins as any).tooltip.enabled = newState;
-    opts.datasets!.line!.pointHoverRadius = newState ? 3 : 0;
-    setOpts(opts);
+    worker.postMessage({ command: "cleanup" });
+    enableTooltips(newState);
   };
 
   const setInterpolate = (interpolate: boolean) => {
@@ -221,6 +242,22 @@ function _Chart(
           <Line data={initialData} ref={chartRef as any} options={opts} />
         </div>
         <MessageToBoard config={config} wsSend={wsSend} />
+
+        {!connected && (
+          <Snackbar
+            anchorOrigin={{
+              horizontal: "center",
+              vertical: "bottom",
+            }}
+            autoHideDuration={7000}
+            className="snackbar"
+            closeable
+            isOpen
+            message="Board disconnected"
+            theme={config.darkTheme ? "dark" : "light"}
+            turnOffAutoHide
+          />
+        )}
       </div>
     </>
   );
