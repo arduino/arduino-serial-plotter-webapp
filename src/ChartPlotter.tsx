@@ -8,7 +8,7 @@ import React, {
 
 import { Line } from "react-chartjs-2";
 
-import { addDataPoints, SerialPlotter } from "./utils";
+import { addDataPoints, MonitorSettings, PluggableMonitor } from "./utils";
 import { Legend } from "./Legend";
 import { Chart, ChartData, ChartOptions } from "chart.js";
 import "chartjs-adapter-luxon";
@@ -29,7 +29,7 @@ function _Chart(
     config,
     websocket,
   }: {
-    config: SerialPlotter.Config;
+    config: Partial<MonitorSettings>;
     websocket: React.MutableRefObject<WebSocket | null>;
   },
   ref: React.ForwardedRef<any>
@@ -38,11 +38,13 @@ function _Chart(
 
   const [, setForceUpdate] = useState(0);
   const [pause, setPause] = useState(false);
-  const [connected, setConnected] = useState(config.connected);
+  const [connected, setConnected] = useState(
+    config?.monitorUISettings?.connected
+  );
   const [dataPointThreshold] = useState(50);
   const [cubicInterpolationMode, setCubicInterpolationMode] = useState<
     "default" | "monotone"
-  >(config.interpolate ? "monotone" : "default");
+  >(config?.monitorUISettings?.interpolate ? "monotone" : "default");
   const [initialData] = useState<ChartData<"line">>({
     datasets: [],
   });
@@ -88,10 +90,10 @@ function _Chart(
     scales: {
       y: {
         grid: {
-          color: config.darkTheme ? "#2C353A" : "#ECF1F1",
+          color: config?.monitorUISettings?.darkTheme ? "#2C353A" : "#ECF1F1",
         },
         ticks: {
-          color: config.darkTheme ? "#DAE3E3" : "#2C353A",
+          color: config?.monitorUISettings?.darkTheme ? "#DAE3E3" : "#2C353A",
           font: {
             family: "Open Sans",
           },
@@ -100,14 +102,14 @@ function _Chart(
       },
       x: {
         grid: {
-          color: config.darkTheme ? "#2C353A" : "#ECF1F1",
+          color: config?.monitorUISettings?.darkTheme ? "#2C353A" : "#ECF1F1",
         },
         display: true,
         ticks: {
           font: {
             family: "Open Sans",
           },
-          color: config.darkTheme ? "#DAE3E3" : "#2C353A",
+          color: config?.monitorUISettings?.darkTheme ? "#DAE3E3" : "#2C353A",
           count: 5,
           callback: (value) => {
             return parseInt(value.toString(), 10);
@@ -142,7 +144,7 @@ function _Chart(
   );
 
   useEffect(() => {
-    if (!config.connected) {
+    if (!config?.monitorUISettings?.connected) {
       setConnected(false);
       // when disconnected, force tooltips to be enabled
       enableTooltips(true);
@@ -150,7 +152,7 @@ function _Chart(
     }
 
     // when the connection becomes connected, need to cleanup the previous state
-    if (!connected && config.connected) {
+    if (!connected && config?.monitorUISettings?.connected) {
       // cleanup buffer state
       worker.postMessage({ command: "cleanup" });
       setConnected(true);
@@ -158,7 +160,7 @@ function _Chart(
       // restore the tooltips state (which match the pause state when connected)
       enableTooltips(pause);
     }
-  }, [config.connected, connected, pause, enableTooltips]);
+  }, [config?.monitorUISettings?.connected, connected, pause, enableTooltips]);
 
   const togglePause = (newState: boolean) => {
     if (newState === pause) {
@@ -215,14 +217,11 @@ function _Chart(
     };
   }, [cubicInterpolationMode, opts, dataPointThreshold]);
 
-  const wsSend = (command: string, data: string | number | boolean) => {
+  const wsSend = (
+    clientCommand: PluggableMonitor.Protocol.ClientCommandMessage
+  ) => {
     if (websocket && websocket?.current?.readyState === WebSocket.OPEN) {
-      websocket.current.send(
-        JSON.stringify({
-          command,
-          data,
-        })
-      );
+      websocket.current.send(JSON.stringify(clientCommand));
     }
   };
 
@@ -254,7 +253,7 @@ function _Chart(
             closeable
             isOpen
             message="Board disconnected"
-            theme={config.darkTheme ? "dark" : "light"}
+            theme={config?.monitorUISettings?.darkTheme ? "dark" : "light"}
             turnOffAutoHide
           />
         )}

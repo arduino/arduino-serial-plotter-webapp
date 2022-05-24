@@ -1,36 +1,29 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { ChartPlotter } from "./ChartPlotter";
 import { namedVariablesMulti } from "./fakeMessagsGenerators";
-import { SerialPlotter } from "./utils";
+import { EOL, isEOL, MonitorSettings, PluggableMonitor } from "./utils";
 
 export default function App() {
-  const [config, setConfig] = useState<SerialPlotter.Config | null>(null);
+  const [config, setConfig] = useState<Partial<MonitorSettings | null>>(null);
 
   const websocket = useRef<WebSocket | null>(null);
 
   const chartRef = useRef<any>();
 
   const onMiddlewareMessage = useCallback(
-    (
-      message:
-        | SerialPlotter.Protocol.StreamMessage
-        | SerialPlotter.Protocol.CommandMessage
-    ) => {
+    (message: PluggableMonitor.Protocol.Message) => {
       // if there is no command
-      if (!SerialPlotter.Protocol.isCommandMessage(message)) {
+      if (PluggableMonitor.Protocol.isDataMessage(message)) {
         chartRef && chartRef.current && chartRef.current.addNewData(message);
         return;
       }
 
-      if (
-        message.command ===
-        SerialPlotter.Protocol.Command.MIDDLEWARE_CONFIG_CHANGED
-      ) {
+      if (PluggableMonitor.Protocol.isMiddlewareCommandMessage(message)) {
         const { darkTheme, serialPort, connected } =
-          message.data as SerialPlotter.Config;
+          message.data.monitorUISettings || {};
 
         let updateTitle = false;
-        let serialNameTitle = config?.serialPort;
+        let serialNameTitle = config?.monitorUISettings?.serialPort;
         if (typeof serialPort !== "undefined") {
           serialNameTitle = serialPort;
           updateTitle = true;
@@ -54,19 +47,23 @@ export default function App() {
         setConfig((c) => ({ ...c, ...message.data }));
       }
     },
-    [config?.serialPort]
+    [config?.monitorUISettings?.serialPort]
   );
 
   // as soon as the wsPort is set, create a websocket connection
   React.useEffect(() => {
-    if (!config?.wsPort) {
+    if (!config?.monitorUISettings?.wsPort) {
       return;
     }
 
-    console.log(`opening ws connection on localhost:${config?.wsPort}`);
-    websocket.current = new WebSocket(`ws://localhost:${config?.wsPort}`);
+    console.log(
+      `opening ws connection on localhost:${config?.monitorUISettings?.wsPort}`
+    );
+    websocket.current = new WebSocket(
+      `ws://localhost:${config?.monitorUISettings?.wsPort}`
+    );
     websocket.current.onmessage = (res: any) => {
-      const message: SerialPlotter.Protocol.Message = JSON.parse(res.data);
+      const message: PluggableMonitor.Protocol.Message = JSON.parse(res.data);
       onMiddlewareMessage(message);
     };
     const wsCurrent = websocket.current;
@@ -76,29 +73,39 @@ export default function App() {
       wsCurrent.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config?.wsPort]);
+  }, [config?.monitorUISettings?.wsPort]);
 
   // at bootstrap read params from the URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
 
-    const urlSettings: SerialPlotter.Config = {
-      currentBaudrate: parseInt(urlParams.get("currentBaudrate") || "9600"),
-      currentLineEnding: urlParams.get("lineEnding") || "\n",
-      baudrates: (urlParams.get("baudrates") || "")
-        .split(",")
-        .map((baud: string) => parseInt(baud)),
-      darkTheme: urlParams.get("darkTheme") === "true",
-      wsPort: parseInt(urlParams.get("wsPort") || "3030"),
-      interpolate: urlParams.get("interpolate") === "true",
-      serialPort: urlParams.get("serialPort") || "/serial/port/address",
-      connected: urlParams.get("connected") === "true",
-      generate: urlParams.get("generate") === "true",
+    const urlSettings: MonitorSettings = {
+      pluggableMonitorSettings: {
+        baudrate: {
+          id: "baudrate",
+          label: "Baudrate",
+          type: "enum",
+          values: (urlParams.get("baudrates") || "").split(","),
+          selectedValue: urlParams.get("baudrate") || "9600",
+        },
+      },
+      monitorUISettings: {
+        lineEnding: isEOL(urlParams.get("lineEnding"))
+          ? (urlParams.get("lineEnding") as EOL)
+          : "\r\n",
+        darkTheme: urlParams.get("darkTheme") === "true",
+        wsPort: parseInt(urlParams.get("wsPort") || "3030"),
+        interpolate: urlParams.get("interpolate") === "true",
+        serialPort: urlParams.get("serialPort") || "/serial/port/address",
+        connected: urlParams.get("connected") === "true",
+        generate: urlParams.get("generate") === "true",
+      },
     };
 
     if (config === null) {
       onMiddlewareMessage({
-        command: SerialPlotter.Protocol.Command.MIDDLEWARE_CONFIG_CHANGED,
+        command:
+          PluggableMonitor.Protocol.MiddlewareCommand.ON_SETTINGS_DID_CHANGE,
         data: urlSettings,
       });
     }
@@ -106,10 +113,13 @@ export default function App() {
 
   // If in "generate" mode, create fake data
   useEffect(() => {
-    if (config?.generate) {
+    if (config?.monitorUISettings?.generate) {
       const randomValuesInterval = setInterval(() => {
         const messages = namedVariablesMulti();
-        onMiddlewareMessage(messages);
+        onMiddlewareMessage({
+          command: null,
+          data: messages,
+        });
       }, 32);
       return () => {
         clearInterval(randomValuesInterval);
