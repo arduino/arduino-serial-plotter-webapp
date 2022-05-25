@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { ChartPlotter } from "./ChartPlotter";
 import { namedVariablesMulti } from "./fakeMessagsGenerators";
 import { EOL, isEOL, MonitorSettings, PluggableMonitor } from "./utils";
 
 export default function App() {
   const [config, setConfig] = useState<Partial<MonitorSettings | null>>(null);
+  const [websocketIsConnected, setWebsocketIsConnected] = useState(false);
 
   const websocket = useRef<WebSocket | null>(null);
 
@@ -51,7 +52,7 @@ export default function App() {
   );
 
   // as soon as the wsPort is set, create a websocket connection
-  React.useEffect(() => {
+  useEffect(() => {
     if (!config?.monitorUISettings?.wsPort) {
       return;
     }
@@ -62,47 +63,52 @@ export default function App() {
     websocket.current = new WebSocket(
       `ws://localhost:${config?.monitorUISettings?.wsPort}`
     );
-    websocket.current.onmessage = (res: any) => {
-      const message: PluggableMonitor.Protocol.Message = JSON.parse(res.data);
-      onMiddlewareMessage(message);
-    };
-    const wsCurrent = websocket.current;
+    setWebsocketIsConnected(true);
 
+    const wsCurrent = websocket.current;
     return () => {
       console.log("closing ws connection");
       wsCurrent.close();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.monitorUISettings?.wsPort]);
+
+  useEffect(() => {
+    if (websocketIsConnected && websocket.current) {
+      websocket.current.onmessage = (res: any) => {
+        const message: PluggableMonitor.Protocol.Message = JSON.parse(res.data);
+        onMiddlewareMessage(message);
+      };
+    }
+  }, [websocketIsConnected, onMiddlewareMessage]);
 
   // at bootstrap read params from the URL
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-
-    const urlSettings: MonitorSettings = {
-      pluggableMonitorSettings: {
-        baudrate: {
-          id: "baudrate",
-          label: "Baudrate",
-          type: "enum",
-          values: (urlParams.get("baudrates") || "").split(","),
-          selectedValue: urlParams.get("baudrate") || "9600",
-        },
-      },
-      monitorUISettings: {
-        lineEnding: isEOL(urlParams.get("lineEnding"))
-          ? (urlParams.get("lineEnding") as EOL)
-          : "\r\n",
-        darkTheme: urlParams.get("darkTheme") === "true",
-        wsPort: parseInt(urlParams.get("wsPort") || "3030"),
-        interpolate: urlParams.get("interpolate") === "true",
-        serialPort: urlParams.get("serialPort") || "/serial/port/address",
-        connected: urlParams.get("connected") === "true",
-        generate: urlParams.get("generate") === "true",
-      },
-    };
-
     if (config === null) {
+      const urlParams = new URLSearchParams(window.location.search);
+
+      const urlSettings: MonitorSettings = {
+        pluggableMonitorSettings: {
+          baudrate: {
+            id: "baudrate",
+            label: "Baudrate",
+            type: "enum",
+            values: (urlParams.get("baudrates") || "").split(","),
+            selectedValue: urlParams.get("baudrate") || "9600",
+          },
+        },
+        monitorUISettings: {
+          lineEnding: isEOL(urlParams.get("lineEnding"))
+            ? (urlParams.get("lineEnding") as EOL)
+            : "\r\n",
+          darkTheme: urlParams.get("darkTheme") === "true",
+          wsPort: parseInt(urlParams.get("wsPort") || "3030"),
+          interpolate: urlParams.get("interpolate") === "true",
+          serialPort: urlParams.get("serialPort") || "/serial/port/address",
+          connected: urlParams.get("connected") === "true",
+          generate: urlParams.get("generate") === "true",
+        },
+      };
+
       onMiddlewareMessage({
         command:
           PluggableMonitor.Protocol.MiddlewareCommand.ON_SETTINGS_DID_CHANGE,
