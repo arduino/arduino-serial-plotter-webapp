@@ -4,15 +4,15 @@ const ctx: Worker = self as any;
 
 // Respond to message from parent thread
 ctx.addEventListener("message", (event) => {
-  const { command, data } = event.data;
+  const { command, message } = event.data;
 
   if (command === "cleanup") {
     buffer = "";
     discardFirstLine = true;
   }
 
-  if (data) {
-    ctx.postMessage(parseSerialMessages(data));
+  if (message) {
+    ctx.postMessage(parseSerialMessages(message));
   }
 });
 

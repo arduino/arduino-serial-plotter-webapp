@@ -14,7 +14,7 @@ export function MessageToBoard({
   const [message, setMessage] = useState("");
 
   const [baudRate, setBaudrate] = useState(
-    config?.pluggableMonitorSettings?.baudarate?.selectedValue
+    config?.pluggableMonitorSettings?.baudrate?.selectedValue
   );
   const [lineEnding, setLineEnding] = useState(
     config?.monitorUISettings?.lineEnding
@@ -24,7 +24,7 @@ export function MessageToBoard({
   );
 
   useEffect(() => {
-    setBaudrate(config?.pluggableMonitorSettings?.baudarate?.selectedValue);
+    setBaudrate(config?.pluggableMonitorSettings?.baudrate?.selectedValue);
   }, [config.pluggableMonitorSettings]);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export function MessageToBoard({
     { value: "\r\n", label: "Both NL & CR" },
   ];
 
-  const baudrates = config?.pluggableMonitorSettings?.baudarate?.values?.map(
+  const baudrates = config?.pluggableMonitorSettings?.baudrate?.values?.map(
     (baud) => ({
       value: baud,
       label: `${baud} baud`,

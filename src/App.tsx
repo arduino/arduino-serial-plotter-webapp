@@ -122,10 +122,7 @@ export default function App() {
     if (config?.monitorUISettings?.generate) {
       const randomValuesInterval = setInterval(() => {
         const messages = namedVariablesMulti();
-        onMiddlewareMessage({
-          command: null,
-          data: messages,
-        });
+        onMiddlewareMessage(messages);
       }, 32);
       return () => {
         clearInterval(randomValuesInterval);

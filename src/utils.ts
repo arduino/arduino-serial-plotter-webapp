@@ -58,10 +58,7 @@ export namespace PluggableMonitor {
       command: MiddlewareCommand;
       data: Partial<MonitorSettings>;
     };
-    type DataMessage = {
-      command: unknown;
-      data: string[];
-    };
+    type DataMessage = string[];
 
     export type Message =
       | ClientCommandMessage
@@ -72,6 +69,7 @@ export namespace PluggableMonitor {
       message: Message
     ): message is ClientCommandMessage {
       return (
+        !Array.isArray(message) &&
         typeof message.command === "string" &&
         Object.keys(ClientCommand).includes(message.command)
       );
@@ -80,12 +78,13 @@ export namespace PluggableMonitor {
       message: Message
     ): message is MiddlewareCommandMessage {
       return (
+        !Array.isArray(message) &&
         typeof message.command === "string" &&
         Object.keys(MiddlewareCommand).includes(message.command)
       );
     }
     export function isDataMessage(message: Message): message is DataMessage {
-      return Array.isArray(message.data);
+      return Array.isArray(message);
     }
   }
 }

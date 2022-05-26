@@ -190,12 +190,12 @@ function _Chart(
   };
 
   useImperativeHandle(ref, () => ({
-    addNewData(data: string[]) {
+    addNewData(message: string[]) {
       if (pause) {
         return;
       }
       // upon message receival update the chart
-      worker.postMessage({ data });
+      worker.postMessage({ message });
     },
   }));
 
