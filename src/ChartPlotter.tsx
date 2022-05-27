@@ -15,7 +15,7 @@ import "chartjs-adapter-luxon";
 import ChartStreaming from "chartjs-plugin-streaming";
 
 import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
-import { MessageToBoard } from "./MessageToBoard";
+import MessageToBoard from "./MessageToBoard";
 
 // eslint-disable-next-line
 import Worker from "worker-loader!./msgAggregatorWorker";
@@ -27,10 +27,12 @@ const worker = new Worker();
 function _Chart(
   {
     config,
-    websocket,
+    wsSend,
   }: {
     config: Partial<MonitorSettings>;
-    websocket: React.MutableRefObject<WebSocket | null>;
+    wsSend: (
+      clientCommand: PluggableMonitor.Protocol.ClientCommandMessage
+    ) => void;
   },
   ref: React.ForwardedRef<any>
 ): React.ReactElement {
@@ -216,14 +218,6 @@ function _Chart(
       worker.removeEventListener("message", addData);
     };
   }, [cubicInterpolationMode, opts, dataPointThreshold]);
-
-  const wsSend = (
-    clientCommand: PluggableMonitor.Protocol.ClientCommandMessage
-  ) => {
-    if (websocket && websocket?.current?.readyState === WebSocket.OPEN) {
-      websocket.current.send(JSON.stringify(clientCommand));
-    }
-  };
 
   return (
     <>

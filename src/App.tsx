@@ -5,11 +5,24 @@ import { EOL, isEOL, MonitorSettings, PluggableMonitor } from "./utils";
 
 export default function App() {
   const [config, setConfig] = useState<Partial<MonitorSettings | null>>(null);
+
+  const [webSocketPort, setWebsocketPort] = useState<number>();
+  const [serialPort, setSerialPort] = useState<string>();
+
   const [websocketIsConnected, setWebsocketIsConnected] = useState(false);
 
   const websocket = useRef<WebSocket | null>(null);
 
   const chartRef = useRef<any>();
+
+  const wsSend = useCallback(
+    (clientCommand: PluggableMonitor.Protocol.ClientCommandMessage) => {
+      if (websocket.current?.readyState === WebSocket.OPEN) {
+        websocket.current.send(JSON.stringify(clientCommand));
+      }
+    },
+    []
+  );
 
   const onMiddlewareMessage = useCallback(
     (message: PluggableMonitor.Protocol.Message) => {
@@ -20,13 +33,22 @@ export default function App() {
       }
 
       if (PluggableMonitor.Protocol.isMiddlewareCommandMessage(message)) {
-        const { darkTheme, serialPort, connected } =
-          message.data.monitorUISettings || {};
+        const {
+          autoscroll,
+          timestamp,
+          lineEnding,
+          interpolate,
+          darkTheme,
+          wsPort,
+          serialPort: serialPortExtracted,
+          connected,
+          generate,
+        } = message.data.monitorUISettings || {};
 
         let updateTitle = false;
-        let serialNameTitle = config?.monitorUISettings?.serialPort;
-        if (typeof serialPort !== "undefined") {
-          serialNameTitle = serialPort;
+        let serialNameTitle = serialPort;
+        if (typeof serialPortExtracted !== "undefined") {
+          serialNameTitle = serialPortExtracted;
           updateTitle = true;
         }
 
@@ -45,24 +67,91 @@ export default function App() {
             ? document.body.classList.add("dark")
             : document.body.classList.remove("dark");
         }
-        setConfig((c) => ({ ...c, ...message.data }));
+
+        // ** we should not set a "setting" as undefined FROM THE IDE,
+        // ** more specifically we will not overwrite a given "setting" if we receive a message from the IDE that doesn't include it,
+        // ** we only overwrite a given "setting" if we recieve a value for it (that's not undefined) from the IDE
+
+        const { id, label, type, values, selectedValue } =
+          message.data.pluggableMonitorSettings?.baudrate || {};
+
+        setConfig((prevConfig) => ({
+          pluggableMonitorSettings: {
+            baudrate: {
+              id:
+                typeof id === "undefined"
+                  ? prevConfig?.pluggableMonitorSettings?.baudrate?.id
+                  : id,
+              label:
+                typeof label === "undefined"
+                  ? prevConfig?.pluggableMonitorSettings?.baudrate?.label
+                  : label,
+              type:
+                typeof type === "undefined"
+                  ? prevConfig?.pluggableMonitorSettings?.baudrate?.type
+                  : type,
+              values:
+                typeof values === "undefined"
+                  ? prevConfig?.pluggableMonitorSettings?.baudrate?.values
+                  : values,
+              selectedValue:
+                typeof selectedValue === "undefined"
+                  ? prevConfig?.pluggableMonitorSettings?.baudrate
+                      ?.selectedValue || "9600"
+                  : selectedValue,
+            },
+          },
+          monitorUISettings: {
+            autoscroll:
+              typeof autoscroll === "undefined"
+                ? prevConfig?.monitorUISettings?.autoscroll
+                : autoscroll,
+            timestamp:
+              typeof timestamp === "undefined"
+                ? prevConfig?.monitorUISettings?.timestamp
+                : timestamp,
+            lineEnding:
+              typeof lineEnding === "undefined"
+                ? prevConfig?.monitorUISettings?.lineEnding
+                : lineEnding,
+            interpolate:
+              typeof interpolate === "undefined"
+                ? prevConfig?.monitorUISettings?.interpolate
+                : interpolate,
+            darkTheme:
+              typeof darkTheme === "undefined"
+                ? prevConfig?.monitorUISettings?.darkTheme
+                : darkTheme,
+            connected:
+              typeof connected === "undefined"
+                ? prevConfig?.monitorUISettings?.connected
+                : connected,
+            generate:
+              typeof generate === "undefined"
+                ? prevConfig?.monitorUISettings?.generate
+                : generate,
+          },
+        }));
+
+        if (typeof serialPortExtracted !== "undefined") {
+          setSerialPort(serialPortExtracted);
+        }
+        if (typeof wsPort !== "undefined") {
+          setWebsocketPort(wsPort);
+        }
       }
     },
-    [config?.monitorUISettings?.serialPort]
+    [serialPort]
   );
 
   // as soon as the wsPort is set, create a websocket connection
   useEffect(() => {
-    if (!config?.monitorUISettings?.wsPort) {
+    if (!webSocketPort) {
       return;
     }
 
-    console.log(
-      `opening ws connection on localhost:${config?.monitorUISettings?.wsPort}`
-    );
-    websocket.current = new WebSocket(
-      `ws://localhost:${config?.monitorUISettings?.wsPort}`
-    );
+    console.log(`opening ws connection on localhost:${webSocketPort}`);
+    websocket.current = new WebSocket(`ws://localhost:${webSocketPort}`);
     setWebsocketIsConnected(true);
 
     const wsCurrent = websocket.current;
@@ -70,7 +159,7 @@ export default function App() {
       console.log("closing ws connection");
       wsCurrent.close();
     };
-  }, [config?.monitorUISettings?.wsPort]);
+  }, [webSocketPort]);
 
   useEffect(() => {
     if (websocketIsConnected && websocket.current) {
@@ -93,7 +182,7 @@ export default function App() {
             label: "Baudrate",
             type: "enum",
             values: (urlParams.get("baudrates") || "").split(","),
-            selectedValue: urlParams.get("baudrate") || "9600",
+            selectedValue: urlParams.get("currentBaudrate") || "9600",
           },
         },
         monitorUISettings: {
@@ -132,7 +221,7 @@ export default function App() {
 
   return (
     (config && (
-      <ChartPlotter config={config} ref={chartRef} websocket={websocket} />
+      <ChartPlotter config={config} wsSend={wsSend} ref={chartRef} />
     )) ||
     null
   );

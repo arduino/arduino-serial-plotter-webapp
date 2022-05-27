@@ -13,7 +13,7 @@ export interface PluggableMonitorSetting {
   // The selected value
   selectedValue: string;
 }
-type PluggableMonitorSettings = Record<string, PluggableMonitorSetting>;
+type PluggableMonitorSettings = Record<"baudrate", PluggableMonitorSetting>;
 
 export type EOL = "" | "\n" | "\r" | "\r\n";
 

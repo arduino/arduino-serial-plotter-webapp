@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Select from "react-select";
 import { isEOL, MonitorSettings, PluggableMonitor } from "./utils";
 
-export function MessageToBoard({
+export default React.memo(function MessageToBoard({
   config,
   wsSend,
 }: {
@@ -13,27 +13,9 @@ export function MessageToBoard({
 }): React.ReactElement {
   const [message, setMessage] = useState("");
 
-  const [baudRate, setBaudrate] = useState(
-    config?.pluggableMonitorSettings?.baudrate?.selectedValue
-  );
-  const [lineEnding, setLineEnding] = useState(
-    config?.monitorUISettings?.lineEnding
-  );
-  const [disabled, setDisabled] = useState(
-    !config?.monitorUISettings?.connected
-  );
-
-  useEffect(() => {
-    setBaudrate(config?.pluggableMonitorSettings?.baudrate?.selectedValue);
-  }, [config.pluggableMonitorSettings]);
-
-  useEffect(() => {
-    setLineEnding(config?.monitorUISettings?.lineEnding);
-  }, [config?.monitorUISettings?.lineEnding]);
-
-  useEffect(() => {
-    setDisabled(!config?.monitorUISettings?.connected);
-  }, [config?.monitorUISettings?.connected]);
+  const baudRate = config?.pluggableMonitorSettings?.baudrate?.selectedValue;
+  const disabled = !config?.monitorUISettings?.connected;
+  const lineEnding = config?.monitorUISettings?.lineEnding;
 
   const lineendings = [
     { value: "", label: "No Line Ending" },
@@ -91,7 +73,6 @@ export function MessageToBoard({
           menuPlacement="top"
           onChange={(event) => {
             if (event && isEOL(event.value)) {
-              setLineEnding(event.value);
               wsSend({
                 command:
                   PluggableMonitor.Protocol.ClientCommand.CHANGE_SETTINGS,
@@ -121,7 +102,6 @@ export function MessageToBoard({
               menuPlacement="top"
               onChange={(val) => {
                 if (val) {
-                  setBaudrate(val.value);
                   wsSend({
                     command:
                       PluggableMonitor.Protocol.ClientCommand.CHANGE_SETTINGS,
@@ -142,4 +122,4 @@ export function MessageToBoard({
       </div>
     </div>
   );
-}
+});
