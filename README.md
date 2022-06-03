@@ -20,8 +20,7 @@ The application is designed to be as agnostic as possible regarding how and wher
 
 ### Config Parameters
 
-The Serial Plotter Web App is initialized by passing a number of parameters in the URL, in the form of a QueryString (eg: http://localhost:3000?currentBaudrate=2400&baudrates=300,1200,2400,4800,9600,19200,38400,57600,74880,115200,230400,250000,500000,1000000,2000000&darkTheme=true&wsPort=5000&connected=true&interpolate=true&generate=true).
-
+The Serial Plotter Web App is initialized by passing a number of parameters in the URL, in the form of a QueryString (eg: http://localhost:3000?darkTheme=true&wsPort=5000&generate=true).
 
 It is possible to update the state of the serial plotter by sending configuration via WebSocket in the form of a JSON-stringified object see the [Command](#websocket-communication-protocol) section below.
 
@@ -82,7 +81,7 @@ There are 4 different messages that can be sent/received:
 
 #### Monitor Settings
 
-Settings changes, sent and received in the Serial Plotter App, must follow the following object structure
+Settings changes, sent and received in the Serial Plotter App, must have the following object structure
 
 ```
 Partial<MonitorSettings> = {
@@ -91,7 +90,7 @@ Partial<MonitorSettings> = {
 }
 ```
 
-That means a Setting Message can container `pluggableMonitorSettings` and/or `monitorUISettings`.
+That means a Setting Message can contain `pluggableMonitorSettings` and/or `monitorUISettings`.
 
 Let's take a look at the difference between the two:
 
