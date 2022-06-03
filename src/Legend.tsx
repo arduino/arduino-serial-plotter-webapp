@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 import { LegendItem } from "./LegendItem";
-import { SerialPlotter } from "./utils";
+import { MonitorSettings, PluggableMonitor } from "./utils";
 import { Scrollbars } from "react-custom-scrollbars";
 import Switch from "react-switch";
 
@@ -16,9 +16,11 @@ export function Legend({
 }: {
   chartRef: ChartJSOrUndefined<"line">;
   pause: boolean;
-  config: SerialPlotter.Config;
+  config: Partial<MonitorSettings>;
   cubicInterpolationMode: "monotone" | "default";
-  wsSend: (command: string, data: string | number | boolean) => void;
+  wsSend: (
+    clientCommand: PluggableMonitor.Protocol.ClientCommandMessage
+  ) => void;
   setPause: (pause: boolean) => void;
   setInterpolate: (interpolate: boolean) => void;
 }): React.ReactElement {
@@ -140,26 +142,35 @@ export function Legend({
             onColor="#008184"
             onChange={(val) => {
               setInterpolate(val);
-
               // send new interpolation mode to middleware
-              wsSend(
-                SerialPlotter.Protocol.Command.PLOTTER_SET_INTERPOLATE,
-                val
-              );
+              wsSend({
+                command:
+                  PluggableMonitor.Protocol.ClientCommand.CHANGE_SETTINGS,
+                data: {
+                  monitorUISettings: {
+                    interpolate: val,
+                  },
+                },
+              });
             }}
             checked={cubicInterpolationMode === "monotone"}
           />
         </label>
         <button
-          disabled={!config.connected}
+          disabled={!config?.monitorUISettings?.connected}
           className="pause-button"
-          title={config.connected ? undefined : "Serial disconnected"}
+          title={
+            config?.monitorUISettings?.connected
+              ? undefined
+              : "Serial disconnected"
+          }
           onClick={() => {
-            if (!config.connected) return;
+            if (!config?.monitorUISettings?.connected) return;
             setPause(!pause);
           }}
         >
-          {((pause || !config.connected) && "RUN") || "STOP"}
+          {((pause || !config?.monitorUISettings?.connected) && "RUN") ||
+            "STOP"}
         </button>
         <button
           className="clear-button"

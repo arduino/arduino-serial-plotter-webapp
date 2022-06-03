@@ -8,14 +8,14 @@ import React, {
 
 import { Line } from "react-chartjs-2";
 
-import { addDataPoints, SerialPlotter } from "./utils";
+import { addDataPoints, MonitorSettings, PluggableMonitor } from "./utils";
 import { Legend } from "./Legend";
 import { Chart, ChartData, ChartOptions } from "chart.js";
 import "chartjs-adapter-luxon";
 import ChartStreaming from "chartjs-plugin-streaming";
 
 import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
-import { MessageToBoard } from "./MessageToBoard";
+import MessageToBoard from "./MessageToBoard";
 
 // eslint-disable-next-line
 import Worker from "worker-loader!./msgAggregatorWorker";
@@ -27,10 +27,12 @@ const worker = new Worker();
 function _Chart(
   {
     config,
-    websocket,
+    wsSend,
   }: {
-    config: SerialPlotter.Config;
-    websocket: React.MutableRefObject<WebSocket | null>;
+    config: Partial<MonitorSettings>;
+    wsSend: (
+      clientCommand: PluggableMonitor.Protocol.ClientCommandMessage
+    ) => void;
   },
   ref: React.ForwardedRef<any>
 ): React.ReactElement {
@@ -38,11 +40,13 @@ function _Chart(
 
   const [, setForceUpdate] = useState(0);
   const [pause, setPause] = useState(false);
-  const [connected, setConnected] = useState(config.connected);
+  const [connected, setConnected] = useState(
+    config?.monitorUISettings?.connected
+  );
   const [dataPointThreshold] = useState(50);
   const [cubicInterpolationMode, setCubicInterpolationMode] = useState<
     "default" | "monotone"
-  >(config.interpolate ? "monotone" : "default");
+  >(config?.monitorUISettings?.interpolate ? "monotone" : "default");
   const [initialData] = useState<ChartData<"line">>({
     datasets: [],
   });
@@ -88,10 +92,10 @@ function _Chart(
     scales: {
       y: {
         grid: {
-          color: config.darkTheme ? "#2C353A" : "#ECF1F1",
+          color: config?.monitorUISettings?.darkTheme ? "#2C353A" : "#ECF1F1",
         },
         ticks: {
-          color: config.darkTheme ? "#DAE3E3" : "#2C353A",
+          color: config?.monitorUISettings?.darkTheme ? "#DAE3E3" : "#2C353A",
           font: {
             family: "Open Sans",
           },
@@ -100,14 +104,14 @@ function _Chart(
       },
       x: {
         grid: {
-          color: config.darkTheme ? "#2C353A" : "#ECF1F1",
+          color: config?.monitorUISettings?.darkTheme ? "#2C353A" : "#ECF1F1",
         },
         display: true,
         ticks: {
           font: {
             family: "Open Sans",
           },
-          color: config.darkTheme ? "#DAE3E3" : "#2C353A",
+          color: config?.monitorUISettings?.darkTheme ? "#DAE3E3" : "#2C353A",
           count: 5,
           callback: (value) => {
             return parseInt(value.toString(), 10);
@@ -142,7 +146,7 @@ function _Chart(
   );
 
   useEffect(() => {
-    if (!config.connected) {
+    if (!config?.monitorUISettings?.connected) {
       setConnected(false);
       // when disconnected, force tooltips to be enabled
       enableTooltips(true);
@@ -150,7 +154,7 @@ function _Chart(
     }
 
     // when the connection becomes connected, need to cleanup the previous state
-    if (!connected && config.connected) {
+    if (!connected && config?.monitorUISettings?.connected) {
       // cleanup buffer state
       worker.postMessage({ command: "cleanup" });
       setConnected(true);
@@ -158,7 +162,7 @@ function _Chart(
       // restore the tooltips state (which match the pause state when connected)
       enableTooltips(pause);
     }
-  }, [config.connected, connected, pause, enableTooltips]);
+  }, [config?.monitorUISettings?.connected, connected, pause, enableTooltips]);
 
   const togglePause = (newState: boolean) => {
     if (newState === pause) {
@@ -188,12 +192,12 @@ function _Chart(
   };
 
   useImperativeHandle(ref, () => ({
-    addNewData(data: string[]) {
+    addNewData(message: string[]) {
       if (pause) {
         return;
       }
       // upon message receival update the chart
-      worker.postMessage({ data });
+      worker.postMessage({ message });
     },
   }));
 
@@ -214,17 +218,6 @@ function _Chart(
       worker.removeEventListener("message", addData);
     };
   }, [cubicInterpolationMode, opts, dataPointThreshold]);
-
-  const wsSend = (command: string, data: string | number | boolean) => {
-    if (websocket && websocket?.current?.readyState === WebSocket.OPEN) {
-      websocket.current.send(
-        JSON.stringify({
-          command,
-          data,
-        })
-      );
-    }
-  };
 
   return (
     <>
@@ -254,7 +247,7 @@ function _Chart(
             closeable
             isOpen
             message="Board disconnected"
-            theme={config.darkTheme ? "dark" : "light"}
+            theme={config?.monitorUISettings?.darkTheme ? "dark" : "light"}
             turnOffAutoHide
           />
         )}

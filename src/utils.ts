@@ -1,37 +1,90 @@
 import { ChartDataset, ChartOptions } from "chart.js";
 import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 
-export namespace SerialPlotter {
-  export type Config = {
-    currentBaudrate: number;
-    currentLineEnding: string;
-    baudrates: number[];
-    darkTheme: boolean;
-    wsPort: number;
-    interpolate: boolean;
-    serialPort: string;
-    connected: boolean;
-    generate?: boolean;
-  };
-  export namespace Protocol {
-    export enum Command {
-      PLOTTER_SET_BAUDRATE = "PLOTTER_SET_BAUDRATE",
-      PLOTTER_SET_LINE_ENDING = "PLOTTER_SET_LINE_ENDING",
-      PLOTTER_SET_INTERPOLATE = "PLOTTER_SET_INTERPOLATE",
-      PLOTTER_SEND_MESSAGE = "PLOTTER_SEND_MESSAGE",
-      MIDDLEWARE_CONFIG_CHANGED = "MIDDLEWARE_CONFIG_CHANGED",
-    }
-    export type CommandMessage = {
-      command: SerialPlotter.Protocol.Command;
-      data?: any;
-    };
-    export type StreamMessage = string[];
-    export type Message = CommandMessage | StreamMessage;
+export interface PluggableMonitorSetting {
+  // The setting identifier
+  readonly id?: string;
+  // A human-readable label of the setting (to be displayed on the GUI)
+  readonly label?: string;
+  // The setting type (at the moment only "enum" is avaiable)
+  readonly type?: string;
+  // The values allowed on "enum" types
+  readonly values?: string[];
+  // The selected value
+  selectedValue: string;
+}
+type PluggableMonitorSettings = Record<"baudrate", PluggableMonitorSetting>;
 
-    export function isCommandMessage(
-      msg: CommandMessage | StreamMessage
-    ): msg is CommandMessage {
-      return (msg as CommandMessage).command !== undefined;
+export type EOL = "" | "\n" | "\r" | "\r\n";
+
+export function isEOL(str: any): str is EOL {
+  const eol = ["", "\n", "\r", "\r\n"];
+  return typeof str === "string" && eol.includes(str);
+}
+
+interface MonitorModelState {
+  autoscroll: boolean;
+  timestamp: boolean;
+  lineEnding: EOL;
+  interpolate: boolean;
+  darkTheme: boolean;
+  wsPort: number;
+  serialPort: string;
+  connected: boolean;
+  generate?: boolean;
+}
+
+export interface MonitorSettings {
+  pluggableMonitorSettings: PluggableMonitorSettings;
+  monitorUISettings: Partial<MonitorModelState>;
+}
+
+export namespace PluggableMonitor {
+  export namespace Protocol {
+    export enum ClientCommand {
+      SEND_MESSAGE = "SEND_MESSAGE",
+      CHANGE_SETTINGS = "CHANGE_SETTINGS",
+    }
+
+    export enum MiddlewareCommand {
+      ON_SETTINGS_DID_CHANGE = "ON_SETTINGS_DID_CHANGE",
+    }
+
+    export type ClientCommandMessage = {
+      command: ClientCommand;
+      data: Partial<MonitorSettings> | string;
+    };
+    type MiddlewareCommandMessage = {
+      command: MiddlewareCommand;
+      data: Partial<MonitorSettings>;
+    };
+    type DataMessage = string[];
+
+    export type Message =
+      | ClientCommandMessage
+      | MiddlewareCommandMessage
+      | DataMessage;
+
+    export function isClientCommandMessage(
+      message: Message
+    ): message is ClientCommandMessage {
+      return (
+        !Array.isArray(message) &&
+        typeof message.command === "string" &&
+        Object.keys(ClientCommand).includes(message.command)
+      );
+    }
+    export function isMiddlewareCommandMessage(
+      message: Message
+    ): message is MiddlewareCommandMessage {
+      return (
+        !Array.isArray(message) &&
+        typeof message.command === "string" &&
+        Object.keys(MiddlewareCommand).includes(message.command)
+      );
+    }
+    export function isDataMessage(message: Message): message is DataMessage {
+      return Array.isArray(message);
     }
   }
 }

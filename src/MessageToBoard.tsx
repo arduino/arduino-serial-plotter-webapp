@@ -1,31 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Select from "react-select";
-import { SerialPlotter } from "./utils";
+import { isEOL, MonitorSettings, PluggableMonitor } from "./utils";
 
-export function MessageToBoard({
+export default React.memo(function MessageToBoard({
   config,
   wsSend,
 }: {
-  config: SerialPlotter.Config;
-  wsSend: (command: string, data: string | number | boolean) => void;
+  config: Partial<MonitorSettings>;
+  wsSend: (
+    clientCommand: PluggableMonitor.Protocol.ClientCommandMessage
+  ) => void;
 }): React.ReactElement {
   const [message, setMessage] = useState("");
 
-  const [baudRate, setBaudrate] = useState(config.currentBaudrate);
-  const [lineEnding, setLineEnding] = useState(config.currentLineEnding);
-  const [disabled, setDisabled] = useState(!config.connected);
-
-  useEffect(() => {
-    setBaudrate(config.currentBaudrate);
-  }, [config.currentBaudrate]);
-
-  useEffect(() => {
-    setLineEnding(config.currentLineEnding);
-  }, [config.currentLineEnding]);
-
-  useEffect(() => {
-    setDisabled(!config.connected);
-  }, [config.connected]);
+  const baudRate = config?.pluggableMonitorSettings?.baudrate?.selectedValue;
+  const disabled = !config?.monitorUISettings?.connected;
+  const lineEnding = config?.monitorUISettings?.lineEnding;
 
   const lineendings = [
     { value: "", label: "No Line Ending" },
@@ -34,20 +24,22 @@ export function MessageToBoard({
     { value: "\r\n", label: "Both NL & CR" },
   ];
 
-  const baudrates = config.baudrates.map((baud) => ({
-    value: baud,
-    label: `${baud} baud`,
-  }));
+  const baudrates = config?.pluggableMonitorSettings?.baudrate?.values?.map(
+    (baud) => ({
+      value: baud,
+      label: `${baud} baud`,
+    })
+  );
 
   return (
     <div className="message-to-board">
       <form
         className="message-container"
         onSubmit={(e) => {
-          wsSend(
-            SerialPlotter.Protocol.Command.PLOTTER_SEND_MESSAGE,
-            message + lineEnding
-          );
+          wsSend({
+            command: PluggableMonitor.Protocol.ClientCommand.SEND_MESSAGE,
+            data: message + lineEnding,
+          });
           setMessage("");
           e.preventDefault();
           e.stopPropagation();
@@ -80,12 +72,16 @@ export function MessageToBoard({
           options={lineendings}
           menuPlacement="top"
           onChange={(event) => {
-            if (event) {
-              setLineEnding(event.value);
-              wsSend(
-                SerialPlotter.Protocol.Command.PLOTTER_SET_LINE_ENDING,
-                event.value
-              );
+            if (event && isEOL(event.value)) {
+              wsSend({
+                command:
+                  PluggableMonitor.Protocol.ClientCommand.CHANGE_SETTINGS,
+                data: {
+                  monitorUISettings: {
+                    lineEnding: event.value,
+                  },
+                },
+              });
             }
           }}
         />
@@ -93,26 +89,37 @@ export function MessageToBoard({
 
       <div>
         <div className="baud">
-          <Select
-            className="singleselect"
-            classNamePrefix="select"
-            isDisabled={disabled}
-            value={baudrates[baudrates.findIndex((b) => b.value === baudRate)]}
-            name="baudrate"
-            options={baudrates}
-            menuPlacement="top"
-            onChange={(val) => {
-              if (val) {
-                setBaudrate(val.value);
-                wsSend(
-                  SerialPlotter.Protocol.Command.PLOTTER_SET_BAUDRATE,
-                  val.value
-                );
+          {baudrates && (
+            <Select
+              className="singleselect"
+              classNamePrefix="select"
+              isDisabled={disabled}
+              value={
+                baudrates[baudrates.findIndex((b) => b.value === baudRate)]
               }
-            }}
-          />
+              name="baudrate"
+              options={baudrates}
+              menuPlacement="top"
+              onChange={(val) => {
+                if (val) {
+                  wsSend({
+                    command:
+                      PluggableMonitor.Protocol.ClientCommand.CHANGE_SETTINGS,
+                    data: {
+                      pluggableMonitorSettings: {
+                        baudrate: {
+                          ...config?.pluggableMonitorSettings?.baudrate,
+                          selectedValue: val.value,
+                        },
+                      },
+                    },
+                  });
+                }
+              }}
+            />
+          )}
         </div>
       </div>
     </div>
   );
-}
+});
