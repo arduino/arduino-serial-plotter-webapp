@@ -104,7 +104,7 @@ body {
     }
 
     .message-to-board-send-button {
-      width: 45px;
+      margin-left: 6px;
     }
   }
 
@@ -224,7 +224,6 @@ body {
       }
 
       .pause-button {
-        width: 47px;
         text-align: center;
       }
 
@@ -362,17 +361,56 @@ input[type="text"]{
   color: #7F8C8D !important;
 }
 
+.dark {
+  button {
+    background-color: $teal1;
+    color: $onyx;
+
+    &:hover {
+      background-color: $teal0;
+    }
+    
+    &:active {
+      box-shadow: 0 0 0 2px $fog;
+    }
+  }
+}
+
 button {
-  background: #B9C7C9;
-  border: 1px solid #E1E1E1;
-  box-sizing: border-box;
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
-  border-radius: 1px;
+  background-color: $teal3;
   color: $white;
-  padding: 6px 5px;
+  align-items: center;
+  display: flex;
+  font-family: 'Open Sans',sans-serif;
+  font-style: normal;
+  font-weight: 700;  
+  font-size: 14px;
+  justify-content: center;
   cursor: pointer;
+  letter-spacing: .01em;
+  line-height: 23.8px;
+  outline: none;
+  padding: 0 16px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  border-width: 2px;
+  border-radius: 32px;
+  text-transform: uppercase;
+  transition: none;
+  box-shadow: none;
+  border-color: transparent;
 
   &[disabled] {
     opacity: 0.5;
+    pointer-events: none;
+  }
+
+  &:hover {
+    background-color: $teal5;
+  }
+
+  &:active {
+     box-shadow: 0 0 0 2px $teal0;
   }
 }
