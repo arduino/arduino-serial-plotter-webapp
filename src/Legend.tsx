@@ -4,6 +4,7 @@ import { LegendItem } from "./LegendItem";
 import { MonitorSettings, PluggableMonitor } from "./utils";
 import { Scrollbars } from "react-custom-scrollbars";
 import Switch from "react-switch";
+import classNames from "classnames";
 
 export function Legend({
   chartRef,
@@ -158,7 +159,7 @@ export function Legend({
         </label>
         <button
           disabled={!config?.monitorUISettings?.connected}
-          className={`pause-button ${pause ? "paused" : ""}`}
+          className={classNames("pause-button", { paused: pause })}
           title={
             config?.monitorUISettings?.connected
               ? undefined
