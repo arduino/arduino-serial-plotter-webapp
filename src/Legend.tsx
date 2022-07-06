@@ -158,7 +158,7 @@ export function Legend({
         </label>
         <button
           disabled={!config?.monitorUISettings?.connected}
-          className="pause-button"
+          className={`pause-button ${pause ? "paused" : ""}`}
           title={
             config?.monitorUISettings?.connected
               ? undefined

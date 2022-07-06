@@ -228,6 +228,14 @@ body {
         text-align: center;
       }
 
+      .pause-button:not(.paused) {
+        background-color: $notifyerror;
+
+        &:hover {
+          background-color: darken($notifyerror, 10);
+        }
+      }
+
       .clear-button {
         border: none;
         background: none;
