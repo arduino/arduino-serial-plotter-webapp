@@ -1,3 +1,4 @@
+const separator = "\n";
 // format1: <value1> <value2> <value3>
 export const generateRandomMessages = () => {
   const messages: string[] = [];
@@ -10,7 +11,7 @@ export const generateRandomMessages = () => {
     }
     let line = variables.join(" ");
 
-    messages.push(line + "\r\n");
+    messages.push(line + separator);
   }
 
   return messages;
@@ -30,7 +31,7 @@ export const namedVariables = () => {
     let pair = genNamedVarValPair(i);
     messages.push(pair);
   }
-  return [messages.join(",") + "\r\n"];
+  return [messages.join(",") + separator];
 };
 
 export const namedVariablesMulti = () => {
@@ -67,5 +68,5 @@ export const jumpyNamedVariables = () => {
     let pair = genNamedVarValPair(i);
     messages.push(pair);
   }
-  return [messages.join(",") + "\r\n"];
+  return [messages.join(",") + separator];
 };
