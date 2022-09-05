@@ -188,7 +188,7 @@ export default function App() {
         monitorUISettings: {
           lineEnding: isEOL(urlParams.get("lineEnding"))
             ? (urlParams.get("lineEnding") as EOL)
-            : "\r\n",
+            : "\n",
           darkTheme: urlParams.get("darkTheme") === "true",
           wsPort: parseInt(urlParams.get("wsPort") || "3030"),
           interpolate: urlParams.get("interpolate") === "true",

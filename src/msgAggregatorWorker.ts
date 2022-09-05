@@ -18,7 +18,7 @@ ctx.addEventListener("message", (event) => {
 
 let buffer = "";
 let discardFirstLine = true;
-const separator = "\r\n";
+const separator = "\n";
 var re = new RegExp(`(${separator})`, "g");
 
 export const parseSerialMessages = (
