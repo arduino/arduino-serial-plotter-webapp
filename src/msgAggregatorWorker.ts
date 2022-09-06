@@ -18,8 +18,10 @@ ctx.addEventListener("message", (event) => {
 
 let buffer = "";
 let discardFirstLine = true;
-const separator = "\n";
-var re = new RegExp(`(${separator})`, "g");
+const separator = "\r?\n";
+const delimiter = "[, \t]+"; // Serial Plotter protocol supports Comma, Space & Tab characters as delimiters
+var separatorRegex = new RegExp(`(${separator})`, "g");
+var delimiterRegex = new RegExp(delimiter, "g");
 
 export const parseSerialMessages = (
   messages: string[]
@@ -31,10 +33,11 @@ export const parseSerialMessages = (
   // so we need to discard it and start aggregating from the first encountered separator
   let joinMessages = messages.join("");
   if (discardFirstLine) {
-    const firstSeparatorIndex = joinMessages.indexOf(separator);
-    if (firstSeparatorIndex > -1) {
+    separatorRegex.lastIndex = 0; // Reset lastIndex to ensure match happens from beginning of string
+    const separatorMatch = separatorRegex.exec(joinMessages);
+    if (separatorMatch && separatorMatch.index > -1) {
       joinMessages = joinMessages.substring(
-        firstSeparatorIndex + separator.length
+        separatorMatch.index + separatorMatch[0].length
       );
       discardFirstLine = false;
     } else {
@@ -47,13 +50,14 @@ export const parseSerialMessages = (
 
   //add any leftover from the buffer to the first line
   const messagesAndBuffer = ((buffer || "") + joinMessages)
-    .split(re)
+    .split(separatorRegex)
     .filter((message) => message.length > 0);
 
   // remove the previous buffer
   buffer = "";
+  separatorRegex.lastIndex = 0;
   // check if the last message contains the delimiter, if not, it's an incomplete string that needs to be added to the buffer
-  if (messagesAndBuffer[messagesAndBuffer.length - 1] !== separator) {
+  if (!separatorRegex.test(messagesAndBuffer[messagesAndBuffer.length - 1])) {
     buffer = messagesAndBuffer[messagesAndBuffer.length - 1];
     messagesAndBuffer.splice(-1);
   }
@@ -62,19 +66,21 @@ export const parseSerialMessages = (
   const parsedLines: { [key: string]: number }[] = [];
 
   // for each line, explode variables
+  separatorRegex.lastIndex = 0;
   messagesAndBuffer
-    .filter((message) => message !== separator)
+    .filter((message) => !separatorRegex.test(message))
     .forEach((message) => {
       const parsedLine: { [key: string]: number } = {};
 
-      //there are two supported formats:
-      // format1: <value1> <value2> <value3>
-      // format2: name1:<value1>,name2:<value2>,name3:<value3>
+      // Part Separator symbols i.e. Space, Tab & Comma are fully supported
+      // SerialPlotter protocol specifies 3 message formats. The following 2 formats are supported
+      // Value only format: <value1> <value2> <value3>
+      // Label-Value format: name1:<value1>,name2:<value2>,name3:<value3>
 
       // if we find a colon, we assume the latter is being used
       let tokens: string[] = [];
       if (message.indexOf(":") > 0) {
-        message.split(",").forEach((keyValue: string) => {
+        message.split(delimiterRegex).forEach((keyValue: string) => {
           let [key, value] = keyValue.split(":");
           key = key && key.trim();
           value = value && value.trim();
@@ -83,8 +89,8 @@ export const parseSerialMessages = (
           }
         });
       } else {
-        // otherwise they are spaces
-        const values = message.split(/\s/);
+        // otherwise they are unlabelled
+        const values = message.split(delimiterRegex);
         values.forEach((value, i) => {
           if (value.length) {
             tokens.push(...[`value ${i + 1}`, value]);
