@@ -1,0 +1,73 @@
+name: Test TypeScript
+
+env:
+  # See: https://github.com/actions/setup-node/#readme
+  NODE_VERSION: 10.x
+
+on:
+  push:
+    paths:
+      - ".github/workflows/test-typescript-npm.ya?ml"
+      - ".github/.?codecov.ya?ml"
+      - "dev/.?codecov.ya?ml"
+      - ".?codecov.ya?ml"
+      - "jest.config.js"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "**.js"
+      - "**.jsx"
+      - "**.ts"
+      - "**.tsx"
+  pull_request:
+    paths:
+      - ".github/workflows/test-typescript-npm.ya?ml"
+      - "jest.config.js"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "**.js"
+      - "**.jsx"
+      - "**.ts"
+      - "**.tsx"
+  schedule:
+    # Run periodically to catch breakage caused by external changes.
+    - cron: "0 13 * * WED"
+  workflow_dispatch:
+  repository_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.operating-system }}
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        operating-system:
+          - macos-latest
+          - ubuntu-latest
+          # The version of node-gyp used by this project (7.1.2) requires an older version of Visual Studio that is not
+          # available in the latest Windows GitHub Actions runner.
+          - windows-2019
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm run-script test
+
+      - name: Send unit test coverage to Codecov
+        if: runner.os == 'Linux'
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: ${{ github.repository == 'arduino/arduino-serial-plotter-webapp' }}

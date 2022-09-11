@@ -1,5 +1,7 @@
 # Serial Plotter WebApp
 
+[![Test TypeScript status](https://github.com/arduino/arduino-serial-plotter-webapp/actions/workflows/test-typescript-npm.yml/badge.svg)](https://github.com/arduino/arduino-serial-plotter-webapp/actions/workflows/test-typescript-npm.yml)
+
 This is a SPA that receives data points over WebSocket and prints graphs. The purpose is to provide a visual and live representation of data printed to the Serial Port.
 
 The application is designed to be as agnostic as possible regarding how and where it runs. For this reason, it accepts different settings when it's launched in order to configure the look&feel and the connection parameters.
@@ -162,6 +164,7 @@ These are sent to the middleware to be stored and propagated to other clients.
 ## Development
 
 - `npm i` to install dependencies
+- `npm test` to run automated tests
 - `npm start` to run the application in development mode @ [http://localhost:3000](http://localhost:3000)
 
 ## Deployment
