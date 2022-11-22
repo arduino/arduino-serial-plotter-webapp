@@ -3,6 +3,10 @@ name: Test TypeScript
 env:
   # See: https://github.com/actions/setup-node/#readme
   NODE_VERSION: 10.x
+  # See: https://github.com/actions/setup-python/tree/main#available-versions-of-python
+  # Using newest version documented as supported by node-gyp dependency:
+  # https://github.com/nodejs/node-gyp/tree/v7.1.2#installation
+  PYTHON_VERSION: 3.8
 
 on:
   push:
@@ -59,6 +63,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
         run: npm install
