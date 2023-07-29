@@ -32,6 +32,7 @@ interface MonitorModelState {
   serialPort: string;
   connected: boolean;
   generate?: boolean;
+  dataPointThreshold: number;
 }
 
 export interface MonitorSettings {

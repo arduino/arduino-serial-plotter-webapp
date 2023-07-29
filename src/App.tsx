@@ -43,6 +43,7 @@ export default function App() {
           serialPort: serialPortExtracted,
           connected,
           generate,
+          dataPointThreshold,
         } = message.data.monitorUISettings || {};
 
         let updateTitle = false;
@@ -130,6 +131,10 @@ export default function App() {
               typeof generate === "undefined"
                 ? prevConfig?.monitorUISettings?.generate
                 : generate,
+            dataPointThreshold:
+              typeof dataPointThreshold === "undefined"
+                ? prevConfig?.monitorUISettings?.dataPointThreshold
+                : dataPointThreshold,
           },
         }));
 
@@ -195,6 +200,9 @@ export default function App() {
           serialPort: urlParams.get("serialPort") || "/serial/port/address",
           connected: urlParams.get("connected") === "true",
           generate: urlParams.get("generate") === "true",
+          dataPointThreshold: parseInt(
+            urlParams.get("dataPointThreshold") || "50"
+          ),
         },
       };
 
