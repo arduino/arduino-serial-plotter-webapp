@@ -223,6 +223,16 @@ body {
         }
       }
 
+      .datapoints {
+        display: flex;
+        align-items: center;
+  
+        span {
+          margin-right: 10px;
+          font-size: 14px;
+        }
+      }
+
       .pause-button {
         width: 75px;
         text-align: center;
@@ -337,6 +347,10 @@ body {
       background-color: var(--select-option-focused);
     }
   }
+}
+
+.datapointscount{
+  min-width:50px;
 }
 
 

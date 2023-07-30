@@ -43,7 +43,9 @@ function _Chart(
   const [connected, setConnected] = useState(
     config?.monitorUISettings?.connected
   );
-  const [dataPointThreshold] = useState(50);
+  const [dataPointThreshold, setDataPointThreshold] = useState<number>(
+    config?.monitorUISettings?.dataPointThreshold || 50
+  );
   const [cubicInterpolationMode, setCubicInterpolationMode] = useState<
     "default" | "monotone"
   >(config?.monitorUISettings?.interpolate ? "monotone" : "default");
@@ -230,6 +232,8 @@ function _Chart(
           wsSend={wsSend}
           setPause={togglePause}
           setInterpolate={setInterpolate}
+          dataPointThreshold={dataPointThreshold}
+          setDataPointThreshold={setDataPointThreshold}
         />
         <div className="canvas-container">
           <Line data={initialData} ref={chartRef as any} options={opts} />

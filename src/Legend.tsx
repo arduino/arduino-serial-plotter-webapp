@@ -4,6 +4,7 @@ import { LegendItem } from "./LegendItem";
 import { MonitorSettings, PluggableMonitor } from "./utils";
 import { Scrollbars } from "react-custom-scrollbars";
 import Switch from "react-switch";
+import Select from "react-select";
 import classNames from "classnames";
 
 export function Legend({
@@ -14,16 +15,20 @@ export function Legend({
   wsSend,
   setPause,
   setInterpolate,
+  dataPointThreshold,
+  setDataPointThreshold,
 }: {
   chartRef: ChartJSOrUndefined<"line">;
   pause: boolean;
   config: Partial<MonitorSettings>;
   cubicInterpolationMode: "monotone" | "default";
+  dataPointThreshold: number;
   wsSend: (
     clientCommand: PluggableMonitor.Protocol.ClientCommandMessage
   ) => void;
   setPause: (pause: boolean) => void;
   setInterpolate: (interpolate: boolean) => void;
+  setDataPointThreshold: (dataPointThreshold: number) => void;
 }): React.ReactElement {
   const scrollRef = useRef<Scrollbars>(null);
 
@@ -131,6 +136,41 @@ export function Legend({
         )}
       </div>
       <div className="actions">
+        <label className="datapoints">
+          <span>Datapoints</span>
+          <Select
+            className="singleselect datapointscount"
+            classNamePrefix="select"
+            value={{
+              value: dataPointThreshold,
+              label: dataPointThreshold.toString(),
+            }}
+            name="datapointscount"
+            options={[
+              { value: 50, label: "50" },
+              { value: 100, label: "100" },
+              { value: 200, label: "200" },
+              { value: 500, label: "500" },
+              { value: 1000, label: "1000" },
+              { value: 5000, label: "5000" },
+            ]}
+            menuPlacement="top"
+            onChange={(event) => {
+              if (event) {
+                setDataPointThreshold(event.value);
+                wsSend({
+                  command:
+                    PluggableMonitor.Protocol.ClientCommand.CHANGE_SETTINGS,
+                  data: {
+                    monitorUISettings: {
+                      dataPointThreshold: event.value,
+                    },
+                  },
+                });
+              }
+            }}
+          />
+        </label>
         <label className="interpolate">
           <span>Interpolate</span>
           <Switch
