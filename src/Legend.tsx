@@ -136,8 +136,8 @@ export function Legend({
         )}
       </div>
       <div className="actions">
-        <label className="interpolate">
-          <span>Number of Datapoints</span>
+        <label className="datapoints">
+          <span>Datapoints</span>
           <Select
             className="singleselect datapointscount"
             classNamePrefix="select"
