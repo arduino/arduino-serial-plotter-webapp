@@ -101,6 +101,26 @@ describe("Parsing data", () => {
           );
         });
 
+        test("labeled padded", () => {
+          const messages = [
+            `0${trailingFieldDelimiter}${recordDelimiter}`,
+            `label_1:    1${fieldDelimiter}label_2:  20${trailingFieldDelimiter}${recordDelimiter}`,
+            `label_1:  300${fieldDelimiter}label_2:4000${trailingFieldDelimiter}${recordDelimiter}`,
+          ];
+
+          const assertion = {
+            datasetNames: ["label_1", "label_2"],
+            parsedLines: [
+              { label_1: 1, label_2: 20 },
+              { label_1: 300, label_2: 4000 },
+            ],
+          };
+
+          expect(messageAggregator.parseSerialMessages(messages)).toEqual(
+            assertion
+          );
+        });
+
         test("buffering", () => {
           // Incomplete record
           let messages = [
