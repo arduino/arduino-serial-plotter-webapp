@@ -76,6 +76,8 @@ export const parseSerialMessages = (
       message = message.replace(delimiterRegex, " ");
       // replace multiple spaces with a single space
       message = message.replace(/\s+/g, " ");
+      // replace all equal signs with a colon
+      message = message.replace(/=/g, ":");
 
       const parsedLine: { [key: string]: number } = {};
 
