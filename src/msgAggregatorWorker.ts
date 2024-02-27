@@ -18,9 +18,9 @@ ctx.addEventListener("message", (event) => {
 
 let buffer = "";
 let discardFirstLine = true;
-const separator = "\r?\n";
+const lineSeparator = "\r?\n";
 const delimiter = "[, \t]+"; // Serial Plotter protocol supports Comma, Space & Tab characters as delimiters
-var separatorRegex = new RegExp(`(${separator})`, "g");
+var lineSeparatorRegex = new RegExp(`(${lineSeparator})`, "g");
 var delimiterRegex = new RegExp(delimiter, "g");
 
 export const parseSerialMessages = (
@@ -33,8 +33,8 @@ export const parseSerialMessages = (
   // so we need to discard it and start aggregating from the first encountered separator
   let joinMessages = messages.join("");
   if (discardFirstLine) {
-    separatorRegex.lastIndex = 0; // Reset lastIndex to ensure match happens from beginning of string
-    const separatorMatch = separatorRegex.exec(joinMessages);
+    lineSeparatorRegex.lastIndex = 0; // Reset lastIndex to ensure match happens from beginning of string
+    const separatorMatch = lineSeparatorRegex.exec(joinMessages);
     if (separatorMatch && separatorMatch.index > -1) {
       joinMessages = joinMessages.substring(
         separatorMatch.index + separatorMatch[0].length
@@ -50,14 +50,16 @@ export const parseSerialMessages = (
 
   //add any leftover from the buffer to the first line
   const messagesAndBuffer = ((buffer || "") + joinMessages)
-    .split(separatorRegex)
+    .split(lineSeparatorRegex)
     .filter((message) => message.length > 0);
 
   // remove the previous buffer
   buffer = "";
-  separatorRegex.lastIndex = 0;
+  lineSeparatorRegex.lastIndex = 0;
   // check if the last message contains the delimiter, if not, it's an incomplete string that needs to be added to the buffer
-  if (!separatorRegex.test(messagesAndBuffer[messagesAndBuffer.length - 1])) {
+  if (
+    !lineSeparatorRegex.test(messagesAndBuffer[messagesAndBuffer.length - 1])
+  ) {
     buffer = messagesAndBuffer[messagesAndBuffer.length - 1];
     messagesAndBuffer.splice(-1);
   }
@@ -66,10 +68,17 @@ export const parseSerialMessages = (
   const parsedLines: { [key: string]: number }[] = [];
 
   // for each line, explode variables
-  separatorRegex.lastIndex = 0;
+  lineSeparatorRegex.lastIndex = 0;
   messagesAndBuffer
-    .filter((message) => !separatorRegex.test(message))
+    .filter((message) => !lineSeparatorRegex.test(message))
     .forEach((message) => {
+      // replace all delimiters with a single space for uniform parsing
+      message = message.replace(delimiterRegex, " ");
+      // replace multiple spaces with a single space
+      message = message.replace(/\s+/g, " ");
+      // replace all equal signs with a colon
+      message = message.replace(/=/g, ":");
+
       const parsedLine: { [key: string]: number } = {};
 
       // Part Separator symbols i.e. Space, Tab & Comma are fully supported
@@ -80,12 +89,15 @@ export const parseSerialMessages = (
       // if we find a colon, we assume the latter is being used
       let tokens: string[] = [];
       if (message.indexOf(":") > 0) {
-        message.split(delimiterRegex).forEach((keyValue: string) => {
-          let [key, value] = keyValue.split(":");
-          key = key && key.trim();
-          value = value && value.trim();
-          if (key && key.length > 0 && value && value.length > 0) {
-            tokens.push(...[key, value]);
+        // Splitting by the separator and handling possible spaces
+        const keyValuePairs = message.split(":").map((kv) => kv.trim());
+        let reformedLine = keyValuePairs.join(":").split(delimiterRegex);
+
+        reformedLine.forEach((kv) => {
+          const [key, value] = kv.split(":");
+          if (key && value) {
+            tokens.push(key.trim());
+            tokens.push(value.trim());
           }
         });
       } else {
